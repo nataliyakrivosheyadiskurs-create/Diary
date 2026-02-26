@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Эмодневник</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f0e17">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Эмодневник">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root {
   --bg: #0f0e17;
@@ -1795,6 +1804,43 @@ function showToast(msg){
   t.textContent=msg;t.classList.add('show');
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);
 }
+
+// ============================================================
+// PWA — Service Worker
+// ============================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+// ============================================================
+// PWA — Back button handling
+// ============================================================
+const _origNavigate = navigate;
+function navigateWithHistory(page) {
+  if (document.getElementById('mainApp').style.display !== 'none') {
+    if (page !== 'dashboard') {
+      history.pushState({page}, '', '#' + page);
+    } else {
+      history.replaceState({page:'dashboard'}, '', '#dashboard');
+    }
+  }
+  _origNavigate(page);
+}
+
+window.addEventListener('popstate', (e) => {
+  if (document.getElementById('mainApp').style.display !== 'none') {
+    const page = e.state?.page || 'dashboard';
+    _origNavigate(page);
+  }
+});
+
+// Override nav items to use history
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.onclick = () => navigateWithHistory(item.dataset.page);
+});
+document.querySelector('.fab').onclick = () => navigateWithHistory('new-entry');
 
 // ============================================================
 // INIT
