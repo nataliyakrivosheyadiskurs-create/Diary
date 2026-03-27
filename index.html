@@ -32,6 +32,8 @@
   --negative-dim: rgba(232,96,122,0.15);
   --neutral: #7baee8;
   --neutral-dim: rgba(123,174,232,0.15);
+  --warning: #f0c060;
+  --warning-dim: rgba(240,192,96,0.15);
   --radius: 16px;
   --radius-sm: 10px;
   --shadow: 0 4px 32px rgba(0,0,0,0.4);
@@ -79,7 +81,6 @@ body::before {
 }
 .lock-logo p { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; }
 
-/* Setup screen (first launch) */
 #setupScreen { display: none; }
 #profileSelectScreen {}
 
@@ -94,7 +95,6 @@ body::before {
 }
 .setup-sub { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 24px; }
 
-/* Profile select */
 .profiles-grid {
   display: grid; grid-template-columns: repeat(2,1fr); gap: 12px;
 }
@@ -106,13 +106,11 @@ body::before {
   position: relative;
 }
 .profile-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(232,149,107,0.15); }
-.profile-card.empty { border-style: dashed; cursor: default; opacity: 0.4; }
 .pcard-lock { position: absolute; top: 8px; right: 10px; font-size: 0.72rem; color: var(--text-dim); }
 .pcard-avatar { font-size: 1.8rem; margin-bottom: 8px; }
 .pcard-name { font-size: 0.88rem; font-weight: 500; margin-bottom: 2px; }
 .pcard-meta { font-size: 0.72rem; color: var(--text-muted); }
 
-/* PIN pad */
 #pinScreen { display: none; }
 .pin-back { display: flex; align-items: center; gap: 8px; color: var(--text-muted); cursor: pointer; font-size: 0.83rem; margin-bottom: 24px; transition: color 0.2s; width: fit-content; }
 .pin-back:hover { color: var(--text); }
@@ -141,7 +139,6 @@ body::before {
 .pin-key.del { color: var(--text-muted); }
 .pin-error { text-align: center; color: var(--negative); font-size: 0.8rem; margin-top: 14px; min-height: 18px; }
 
-/* Setup steps */
 .setup-step { display: none; }
 .setup-step.active { display: block; }
 
@@ -202,6 +199,14 @@ body::before {
 .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-dim); font-weight: 500; }
 .nav-icon { font-size: 0.95rem; width: 17px; text-align: center; }
 
+/* Unsaved badge on nav item */
+.nav-badge {
+  margin-left: auto; background: var(--warning); color: #0f0e17;
+  font-size: 0.62rem; font-weight: 700; padding: 1px 6px;
+  border-radius: 8px; display: none;
+}
+.nav-badge.show { display: block; }
+
 .main { margin-left: 228px; min-height: 100vh; display: flex; flex-direction: column; }
 
 .topbar {
@@ -213,6 +218,24 @@ body::before {
 .topbar-right { display: flex; align-items: center; gap: 10px; font-size: 0.78rem; color: var(--text-muted); }
 .hamburger { display: none; background: none; border: none; color: var(--text); font-size: 1.3rem; cursor: pointer; padding: 3px; }
 
+/* Sync status indicator */
+.sync-status {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.73rem; padding: 4px 10px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text-muted);
+  white-space: nowrap;
+}
+.sync-status .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-dim); flex-shrink: 0;
+}
+.sync-status.synced .dot { background: var(--positive); }
+.sync-status.syncing .dot { background: var(--warning); animation: pulse 1s infinite; }
+.sync-status.error .dot { background: var(--negative); }
+.sync-status.offline .dot { background: var(--text-dim); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
 .sync-btn {
   background: none; border: 1px solid var(--border); border-radius: 8px;
   padding: 5px 10px; font-size: 0.76rem; color: var(--text-muted);
@@ -223,6 +246,15 @@ body::before {
 .sync-btn.syncing .sync-icon { animation: spin 1s linear infinite; display: inline-block; }
 
 .content { flex: 1; padding: 26px; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+/* Pending banner */
+.pending-banner {
+  background: var(--warning-dim); border: 1px solid var(--warning);
+  border-radius: var(--radius-sm); padding: 11px 14px;
+  font-size: 0.82rem; color: var(--warning); margin-bottom: 16px;
+  display: none; align-items: center; justify-content: space-between; gap: 10px;
+}
+.pending-banner.show { display: flex; }
 
 /* ======== PAGES ======== */
 .page { display: none; animation: fadeUp 0.3s ease; }
@@ -281,8 +313,9 @@ body::before {
 .emo-tag.neutral { background: var(--neutral-dim); color: var(--neutral); }
 .emo-tag .cnt { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 1px 5px; font-size: 0.68rem; }
 
-.entry-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 9px; display: flex; gap: 12px; transition: all 0.2s; }
+.entry-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 9px; display: flex; gap: 12px; transition: all 0.2s; position: relative; }
 .entry-card:hover { border-color: var(--accent); background: var(--surface2); }
+.entry-card.pending { border-left: 3px solid var(--warning); }
 .entry-time { font-size: 0.7rem; color: var(--text-muted); min-width: 44px; padding-top: 2px; }
 .entry-icon { font-size: 1.6rem; flex-shrink: 0; }
 .entry-body { flex: 1; }
@@ -293,6 +326,7 @@ body::before {
 .entry-badge.positive { background: var(--positive-dim); color: var(--positive); }
 .entry-badge.negative { background: var(--negative-dim); color: var(--negative); }
 .entry-badge.neutral { background: var(--neutral-dim); color: var(--neutral); }
+.entry-pending-badge { font-size: 0.66rem; padding: 1px 6px; border-radius: 6px; background: var(--warning-dim); color: var(--warning); display: inline-block; margin-left: 5px; }
 
 .date-header { font-family: 'Cormorant Garamond', serif; font-size: 0.92rem; color: var(--text-muted); margin: 16px 0 7px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
 
@@ -584,7 +618,7 @@ body::before {
     <nav class="sidebar-nav">
       <div class="nav-section">Главное</div>
       <div class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span>Дашборд</div>
-      <div class="nav-item" data-page="new-entry"><span class="nav-icon">✍️</span>Новая запись</div>
+      <div class="nav-item" data-page="new-entry"><span class="nav-icon">✍️</span>Новая запись<span class="nav-badge" id="pendingBadge"></span></div>
       <div class="nav-item" data-page="history"><span class="nav-icon">📖</span>История</div>
       <div class="nav-section">Аналитика</div>
       <div class="nav-item" data-page="analytics"><span class="nav-icon">📊</span>Анализ</div>
@@ -600,13 +634,23 @@ body::before {
       <button class="hamburger" id="hamburger">☰</button>
       <div class="topbar-title" id="pageTitle">Дашборд</div>
       <div class="topbar-right">
+        <div class="sync-status" id="syncStatus">
+          <span class="dot"></span>
+          <span id="syncStatusText">—</span>
+        </div>
         <button class="sync-btn" onclick="syncNow()" id="syncBtn">
-          <span class="sync-icon">↻</span> Синхронизировать
+          <span class="sync-icon">↻</span> Синхр.
         </button>
         <span id="topbarDate"></span>
       </div>
     </div>
     <div class="content">
+
+      <!-- Pending banner (shown when there are unsynced entries) -->
+      <div class="pending-banner" id="pendingBanner">
+        <span id="pendingBannerText">⚠️ Есть несинхронизированные записи</span>
+        <button class="btn btn-sm" style="background:var(--warning);color:#0f0e17;border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:7px;padding:5px 11px;white-space:nowrap" onclick="syncNow()">Синхронизировать</button>
+      </div>
 
       <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
@@ -805,17 +849,8 @@ body::before {
           <div id="profilesSettingsList"></div>
         </div>
         <div class="card" style="margin-bottom:14px">
-          <div class="settings-title">Google Sheets</div>
-          <div class="form-group">
-            <label class="form-label">URL Apps Script</label>
-            <input class="form-input" type="url" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/...">
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="saveScriptUrl()">Сохранить</button>
-          <div class="info-box">
-            📋 <strong>Обновлённый скрипт:</strong> замените старый код в Apps Script на новый, создайте новое развёртывание (URL изменится).
-          </div>
-          <div class="code-block" id="gasCodeBlock"></div>
-          <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="copyGas()">📋 Скопировать код</button>
+          <div class="settings-title">База данных (Supabase)</div>
+          <div class="info-box" id="supabaseStatus">⏳ Проверка подключения...</div>
         </div>
         <div class="card">
           <div class="settings-title">Данные</div>
@@ -824,11 +859,18 @@ body::before {
             <button class="btn btn-secondary btn-sm" onclick="syncNow()">↻ Синхронизировать</button>
           </div>
           <div class="settings-row">
+            <div>
+              <div class="settings-row-lbl">Отправить несохранённые записи</div>
+              <div class="settings-row-desc" id="pendingCountDesc">Записей ожидает отправки: 0</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="flushPending()">⬆️ Отправить</button>
+          </div>
+          <div class="settings-row">
             <div><div class="settings-row-lbl">Экспорт в JSON</div><div class="settings-row-desc">Скачать мои записи</div></div>
             <button class="btn btn-secondary btn-sm" onclick="exportData()">⬇️ Скачать</button>
           </div>
           <div class="settings-row">
-            <div><div class="settings-row-lbl">Очистить кэш</div><div class="settings-row-desc">Удалить локальный кэш записей</div></div>
+            <div><div class="settings-row-lbl">Очистить кэш</div><div class="settings-row-desc">Удалить локальный кэш (данные в Sheets останутся)</div></div>
             <button class="btn btn-danger btn-sm" onclick="clearCache()">🗑️ Очистить</button>
           </div>
         </div>
@@ -918,48 +960,96 @@ const DEFAULT_PROFILES = [
   {id:'user3',name:'Пользователь 3',avatar:'🦋',pin:null},
 ];
 
+// ============================================================
+// UPDATED GAS CODE — Sheets-first, with duplicate check
+// ============================================================
 const GAS_CODE = `function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
-  
-  if (data.action === 'getEntries') {
-    var rows = sheet.getDataRange().getValues();
-    var headers = rows[0];
-    var result = [];
-    for (var i = 1; i < rows.length; i++) {
-      var row = {};
-      headers.forEach(function(h, j) { row[h] = rows[i][j]; });
-      if (row['Пользователь'] === data.user) result.push(row);
-    }
-    return ContentService.createTextOutput(
-      JSON.stringify({status:'ok', entries: result}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  if (data.action === 'addEntry') {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('Entries') || ss.getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+
+    var HEADERS = ['ID','Дата','Пользователь','Эмоции','Категория',
+      'Причины','Описание','Влияние','Интенсивность','Оценка','Заметка'];
+
+    // Ensure header row
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(['ID','Дата','Пользователь','Эмоции','Категория',
-        'Причины','Описание','Влияние','Интенсивность','Оценка','Заметка']);
+      sheet.appendRow(HEADERS);
+    } else {
+      var firstRow = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0];
+      if (firstRow[0] !== 'ID') sheet.insertRowBefore(1).getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     }
-    sheet.appendRow([data.id, data.timestamp, data.user, data.emotions,
-      data.category, data.causes, data.causeDesc, data.impacts,
-      data.intensity, data.dayRating, data.freeNote]);
-    return ContentService.createTextOutput(
-      JSON.stringify({status:'ok'}))
-      .setMimeType(ContentService.MimeType.JSON);
+
+    // GET entries for a user
+    if (data.action === 'getEntries') {
+      var rows = sheet.getDataRange().getValues();
+      var headers = rows[0];
+      var result = [];
+      for (var i = 1; i < rows.length; i++) {
+        var row = {};
+        headers.forEach(function(h, j) { row[h] = rows[i][j]; });
+        if (String(row['Пользователь']) === String(data.user)) result.push(row);
+      }
+      return json({status:'ok', entries: result, count: result.length});
+    }
+
+    // ADD entry (with duplicate check by ID)
+    if (data.action === 'addEntry') {
+      // Check for duplicate
+      var existing = sheet.getDataRange().getValues();
+      for (var r = 1; r < existing.length; r++) {
+        if (String(existing[r][0]) === String(data.id)) {
+          return json({status:'ok', duplicate: true});
+        }
+      }
+      sheet.appendRow([
+        data.id, data.timestamp, data.user,
+        data.emotions, data.category, data.causes,
+        data.causeDesc, data.impacts, data.intensity,
+        data.dayRating, data.freeNote
+      ]);
+      return json({status:'ok', duplicate: false});
+    }
+
+    // BATCH add entries (for syncing pending queue)
+    if (data.action === 'addBatch') {
+      var existing2 = sheet.getDataRange().getValues();
+      var existingIds = new Set(existing2.slice(1).map(function(r){ return String(r[0]); }));
+      var added = 0;
+      (data.entries || []).forEach(function(entry) {
+        if (!existingIds.has(String(entry.id))) {
+          sheet.appendRow([
+            entry.id, entry.timestamp, entry.user,
+            entry.emotions, entry.category, entry.causes,
+            entry.causeDesc, entry.impacts, entry.intensity,
+            entry.dayRating, entry.freeNote
+          ]);
+          added++;
+        }
+      });
+      return json({status:'ok', added: added});
+    }
+
+    return json({status:'error', message: 'Unknown action'});
+  } catch(err) {
+    return json({status:'error', message: err.toString()});
   }
 }
 
-function doGet(e) {
-  return doPost(e);
-}`;
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) { return doPost(e); }`;
 
 // ============================================================
 // STATE
 // ============================================================
 let profiles = [];
 let currentProfileId = null;
-let entries = []; // current user's entries (cached)
+let entries = [];        // confirmed entries (from Sheets + cache)
+let pendingQueue = [];   // entries waiting to be sent to Sheets
 let pinBuf = '', setupPinBuf = '', confirmBuf = '';
 let setupData = {name:'', avatar:'🌸'};
 let editAvatarSel = '';
@@ -967,6 +1057,7 @@ let currentDashPeriod = 'day';
 let currentAnalyticsPeriod = 'week';
 let curEntry = {};
 let editingProfileId = null;
+let syncStatusState = 'offline'; // offline | syncing | synced | error
 
 // ============================================================
 // LOCAL STORAGE HELPERS
@@ -985,76 +1076,125 @@ function getProfile(id) { return profiles.find(p => p.id === id); }
 function getScriptUrl() { return localStorage.getItem('emo3_script_url') || ''; }
 function getApiKey() { return localStorage.getItem('emo3_api_key') || ''; }
 
-// Cache entries locally
+// Cache = confirmed entries from Sheets
 function getCachedEntries(profileId) {
   const raw = localStorage.getItem('emo3_cache_' + profileId);
   return raw ? JSON.parse(raw) : [];
 }
-
 function setCachedEntries(profileId, data) {
   localStorage.setItem('emo3_cache_' + profileId, JSON.stringify(data));
 }
 
+// Pending queue = entries created offline, not yet in Sheets
+function loadPendingQueue(profileId) {
+  const raw = localStorage.getItem('emo3_pending_' + profileId);
+  return raw ? JSON.parse(raw) : [];
+}
+function savePendingQueue(profileId, queue) {
+  localStorage.setItem('emo3_pending_' + profileId, JSON.stringify(queue));
+}
+
+// All entries = confirmed + pending (pending shown with warning mark)
+function getAllEntries() {
+  const pending = pendingQueue.map(e => ({...e, _pending: true}));
+  // Merge: pending on top, avoid duplicates
+  const confirmedIds = new Set(entries.map(e => String(e.id)));
+  const newPending = pending.filter(e => !confirmedIds.has(String(e.id)));
+  return [...newPending, ...entries].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+}
+
 // ============================================================
-// GOOGLE SHEETS API
+// SYNC STATUS UI
 // ============================================================
-async function sheetsPost(payload) {
-  const url = getScriptUrl();
-  if (!url) throw new Error('No script URL');
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(payload)
-  });
-  return await resp.json();
+function setSyncStatus(state, text) {
+  syncStatusState = state;
+  const el = document.getElementById('syncStatus');
+  const txt = document.getElementById('syncStatusText');
+  if (!el) return;
+  el.className = 'sync-status ' + state;
+  txt.textContent = text || {
+    offline: 'Офлайн',
+    syncing: 'Синхр...',
+    synced: 'Синхронизировано',
+    error: 'Ошибка связи'
+  }[state];
 }
 
-async function fetchEntriesFromSheets(profileName) {
-  const data = await sheetsPost({action: 'getEntries', user: profileName});
-  if (data.status !== 'ok') throw new Error('Bad response');
-  // Parse rows into entry objects
-  return (data.entries || []).map(row => ({
-    id: row['ID'] || row['Дата'],
-    timestamp: row['Дата'],
-    emotions: parseEmotionsFromString(row['Эмоции'] || ''),
-    category: row['Категория'] || 'neutral',
-    causes: (row['Причины'] || '').split(',').map(s=>s.trim()).filter(Boolean),
-    causeDesc: row['Описание'] || '',
-    impacts: (row['Влияние'] || '').split(',').map(s=>s.trim()).filter(Boolean),
-    intensity: parseInt(row['Интенсивность']) || 3,
-    dayRating: parseInt(row['Оценка']) || 6,
-    freeNote: row['Заметка'] || '',
-  })).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+function updatePendingUI() {
+  const count = pendingQueue.length;
+  const badge = document.getElementById('pendingBadge');
+  const banner = document.getElementById('pendingBanner');
+  const bannerText = document.getElementById('pendingBannerText');
+  const countDesc = document.getElementById('pendingCountDesc');
+
+  if (badge) { badge.textContent = count > 0 ? count : ''; badge.classList.toggle('show', count > 0); }
+  if (banner) banner.classList.toggle('show', count > 0);
+  if (bannerText) bannerText.textContent = `⚠️ ${count} запис${count===1?'ь':count<5?'и':'ей'} ожидают отправки в Google Sheets`;
+  if (countDesc) countDesc.textContent = `Записей ожидает отправки: ${count}`;
 }
 
-function parseEmotionsFromString(str) {
-  if (!str) return [];
-  const allEmos = [...EMOTIONS.positive, ...EMOTIONS.negative, ...EMOTIONS.neutral];
-  const catMap = {};
-  EMOTIONS.positive.forEach(e => catMap[e.l] = {cat:'positive', ...e});
-  EMOTIONS.negative.forEach(e => catMap[e.l] = {cat:'negative', ...e});
-  EMOTIONS.neutral.forEach(e => catMap[e.l] = {cat:'neutral', ...e});
-  return str.split(',').map(s => s.trim()).filter(Boolean).map(name => {
-    const found = catMap[name];
-    return found || {id: name, e: '❓', l: name, cat: 'neutral'};
-  });
+// ============================================================
+// SUPABASE CONFIG
+// ============================================================
+const SUPABASE_URL = 'https://liyfoffelsplezaqpbcn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpeWZvZmZlbHNwbGV6YXFwYmNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzIwMDYsImV4cCI6MjA5MDIwODAwNn0.wNHEu7vrpQa2zTxku_xmXzMeOUy1fWNTHMe50DgBim4';
+const SB_HDR = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+
+async function sbSelect(table, filter) {
+  const r = await fetch(SUPABASE_URL+'/rest/v1/'+table+'?'+filter+'&order=timestamp.desc', {headers: SB_HDR});
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbInsert(table, row) {
+  const r = await fetch(SUPABASE_URL+'/rest/v1/'+table, {method:'POST', headers:{...SB_HDR,'Prefer':'return=minimal'}, body:JSON.stringify(row)});
+  if (!r.ok) throw new Error(await r.text());
+}
+async function sbInsertBatch(table, rows) {
+  if (!rows.length) return;
+  const r = await fetch(SUPABASE_URL+'/rest/v1/'+table, {method:'POST', headers:{...SB_HDR,'Prefer':'return=minimal,resolution=ignore-duplicates'}, body:JSON.stringify(rows)});
+  if (!r.ok) throw new Error(await r.text());
 }
 
-async function addEntryToSheets(entry, profileName) {
-  await sheetsPost({
-    action: 'addEntry',
-    id: entry.id,
-    timestamp: entry.timestamp,
-    user: profileName,
-    emotions: entry.emotions.map(e=>e.l).join(', '),
-    category: entry.category,
-    causes: entry.causes.join(', '),
-    causeDesc: entry.causeDesc || '',
-    impacts: entry.impacts.join(', '),
-    intensity: entry.intensity,
-    dayRating: entry.dayRating,
-    freeNote: entry.freeNote || ''
-  });
+// Row <-> Entry conversion
+function entryToRow(e, pid) {
+  return { id: e.id, profile_id: pid, timestamp: e.timestamp,
+    emotions: e.emotions.map(x=>x.l).join(', '), category: e.category,
+    causes: e.causes.join(', '), cause_desc: e.causeDesc||'',
+    impacts: e.impacts.join(', '), intensity: e.intensity,
+    day_rating: e.dayRating, free_note: e.freeNote||'' };
+}
+function rowToEntry(r) {
+  return { id: r.id, timestamp: r.timestamp,
+    emotions: parseEmotionsFromString(r.emotions||''),
+    category: r.category||'neutral',
+    causes: splitCSV(r.causes), causeDesc: r.cause_desc||'',
+    impacts: splitCSV(r.impacts), intensity: r.intensity||3,
+    dayRating: r.day_rating||6, freeNote: r.free_note||'' };
+}
+function splitCSV(s) { return (s||'').split(',').map(x=>x.trim()).filter(Boolean); }
+
+// ============================================================
+// FLUSH PENDING QUEUE
+// ============================================================
+async function flushPending() {
+  if (!currentProfileId || pendingQueue.length === 0) return;
+  setSyncStatus('syncing');
+  try {
+    await sbInsertBatch('entries', pendingQueue.map(e => entryToRow(e, currentProfileId)));
+    const ids = new Set(entries.map(e => String(e.id)));
+    pendingQueue.forEach(e => { if (!ids.has(String(e.id))) entries.unshift(e); });
+    entries.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+    pendingQueue = [];
+    savePendingQueue(currentProfileId, pendingQueue);
+    setCachedEntries(currentProfileId, entries);
+    updatePendingUI();
+    setSyncStatus('synced');
+    showToast('✅ Все записи отправлены в Supabase!');
+    renderDashboard(); renderHistory();
+  } catch(e) {
+    setSyncStatus('error');
+    showToast('❌ Ошибка отправки: ' + e.message);
+  }
 }
 
 // ============================================================
@@ -1067,12 +1207,14 @@ function renderProfilesGrid() {
   const grid = document.getElementById('profilesGrid');
   const colors = ['rgba(232,149,107,0.12)','rgba(123,174,232,0.12)','rgba(110,207,142,0.12)','rgba(200,150,232,0.12)'];
   grid.innerHTML = profiles.map((p,i) => {
-    const count = getCachedEntries(p.id).length;
+    const cached = getCachedEntries(p.id).length;
+    const pending = loadPendingQueue(p.id).length;
+    const meta = [cached + ' записей', pending > 0 ? `⚠️ ${pending} не отправлено` : ''].filter(Boolean).join(' · ');
     return `<div class="profile-card" onclick="selectProfile('${p.id}')" style="background:${colors[i]||colors[0]}">
       <div class="pcard-lock">${p.pin?'🔒':'🔓'}</div>
       <div class="pcard-avatar">${p.avatar}</div>
       <div class="pcard-name">${p.name}</div>
-      <div class="pcard-meta">${count} записей</div>
+      <div class="pcard-meta">${meta}</div>
     </div>`;
   }).join('');
 }
@@ -1108,19 +1250,16 @@ function selectProfile(id) {
   currentProfileId = id;
 
   if (!p.pin) {
-    // First time — set up PIN
     document.getElementById('profileSelectScreen').style.display = 'none';
     document.getElementById('setupScreen').style.display = 'block';
     document.getElementById('setupTitle').textContent = `Настройка: ${p.name}`;
     document.getElementById('setupNameInput').value = p.name;
-    setupData = {name: p.name, avatar: p.avatar};
-    setupData.isExistingProfile = true;
+    setupData = {name: p.name, avatar: p.avatar, isExistingProfile: true};
     buildAvatarGrid('avatarGrid', setupData.avatar, (a) => { setupData.avatar = a; });
     setupNext(1);
     return;
   }
 
-  // Show PIN screen
   document.getElementById('profileSelectScreen').style.display = 'none';
   document.getElementById('pinScreen').style.display = 'block';
   document.getElementById('pinAv').textContent = p.avatar;
@@ -1130,7 +1269,6 @@ function selectProfile(id) {
   updateDots('pinDots', 0);
 }
 
-// PIN pad handlers
 function kp(d) {
   if (pinBuf.length >= 4) return;
   pinBuf += d;
@@ -1150,7 +1288,6 @@ function checkPin() {
   }
 }
 
-// Setup PIN handlers
 function sp(d) { if (setupPinBuf.length>=4) return; setupPinBuf+=d; updateDots('setupDots',setupPinBuf.length); if (setupPinBuf.length===4) setTimeout(()=>setupNext(3),150); }
 function sd() { if (setupPinBuf.length>0){setupPinBuf=setupPinBuf.slice(0,-1);updateDots('setupDots',setupPinBuf.length);} }
 function cp(d) { if (confirmBuf.length>=4) return; confirmBuf+=d; updateDots('confirmDots',confirmBuf.length); if (confirmBuf.length===4) setTimeout(finishSetup,150); }
@@ -1203,29 +1340,34 @@ function flashDots(id) {
 }
 
 // ============================================================
-// ENTER APP
+// ENTER APP — Sheets-first loading
 // ============================================================
 async function enterApp(profileId) {
   currentProfileId = profileId;
   const p = getProfile(profileId);
 
-  // Show loading
+  // Load pending queue first (offline entries)
+  pendingQueue = loadPendingQueue(profileId);
+
   showLoading('Загрузка записей...');
   document.getElementById('lockScreen').style.display = 'none';
 
-  // Load entries from Sheets (with cache fallback)
+  // Load from cache immediately so UI is responsive
   entries = getCachedEntries(profileId);
 
-  const url = getScriptUrl();
-  if (url) {
-    try {
-      const fresh = await fetchEntriesFromSheets(p.name);
-      entries = fresh;
-      setCachedEntries(profileId, entries);
-    } catch(e) {
-      // Use cache
-      showToast('⚠️ Загружены кэшированные данные');
+  setSyncStatus('syncing', 'Загрузка...');
+  try {
+    const fresh = await sbSelect('entries', 'profile_id=eq.'+encodeURIComponent(profileId));
+    entries = fresh.map(rowToEntry);
+    setCachedEntries(profileId, entries);
+    setSyncStatus('synced');
+    if (pendingQueue.length > 0) {
+      showToast('📤 Отправка ' + pendingQueue.length + ' записей из очереди...');
+      setTimeout(() => flushPending(), 1500);
     }
+  } catch(e) {
+    setSyncStatus('error');
+    showToast(entries.length > 0 ? '⚠️ Нет связи — загружены кэшированные данные' : '⚠️ Нет связи с Supabase');
   }
 
   hideLoading();
@@ -1235,18 +1377,20 @@ async function enterApp(profileId) {
   document.getElementById('su_sidebar').textContent = p.avatar;
   document.getElementById('sun_sidebar').textContent = p.name;
 
-  // Load settings
+  // Load settings inputs
   const surl = getScriptUrl();
   if (surl) document.getElementById('scriptUrlInput').value = surl;
   const key = getApiKey();
   if (key) document.getElementById('apiKeyInput').value = key;
-  document.getElementById('gasCodeBlock').textContent = GAS_CODE;
-
   updateTopBar();
+  updatePendingUI();
   navigate('dashboard');
   buildEmoPicker();
   buildCauseChips();
   renderProfilesSettingsList();
+
+  // Auto-sync every 5 minutes if online
+  setInterval(() => { if (getScriptUrl()) syncNow(true); }, 5 * 60 * 1000);
 }
 
 function lockApp() {
@@ -1254,6 +1398,7 @@ function lockApp() {
   document.getElementById('lockScreen').style.display = 'flex';
   currentProfileId = null;
   entries = [];
+  pendingQueue = [];
   pinBuf = '';
   backToProfiles();
   renderProfilesGrid();
@@ -1262,30 +1407,32 @@ function lockApp() {
 // ============================================================
 // SYNC
 // ============================================================
-async function syncNow() {
+async function syncNow(silent = false) {
   if (!currentProfileId) return;
   const url = getScriptUrl();
-  if (!url) { showToast('⚠️ URL не настроен'); return; }
+  if (!url) { if (!silent) showToast('⚠️ URL не настроен'); return; }
 
   const btn = document.getElementById('syncBtn');
   btn.classList.add('syncing');
-  showLoading('Синхронизация...');
+  setSyncStatus('syncing');
+  if (!silent) showLoading('Синхронизация...');
 
   try {
-    const p = getProfile(currentProfileId);
-    const fresh = await fetchEntriesFromSheets(p.name);
-    entries = fresh;
+    if (pendingQueue.length > 0) await flushPending();
+    const fresh = await sbSelect('entries', 'profile_id=eq.'+encodeURIComponent(currentProfileId));
+    entries = fresh.map(rowToEntry);
     setCachedEntries(currentProfileId, entries);
-    renderDashboard();
-    renderHistory();
-    renderAnalytics();
-    showToast('✅ Данные обновлены!');
+    setSyncStatus('synced');
+    updatePendingUI();
+    renderDashboard(); renderHistory(); renderAnalytics();
+    if (!silent) showToast('✅ Данные обновлены!');
   } catch(e) {
-    showToast('❌ Ошибка синхронизации');
+    setSyncStatus('error');
+    if (!silent) showToast('❌ Ошибка синхронизации');
   }
 
   btn.classList.remove('syncing');
-  hideLoading();
+  if (!silent) hideLoading();
 }
 
 // ============================================================
@@ -1308,7 +1455,7 @@ function navigate(page) {
   if (page==='history') renderHistory();
   if (page==='analytics') renderAnalytics();
   if (page==='dashboard') renderDashboard();
-  if (page==='settings') renderProfilesSettingsList();
+  if (page==='settings') { renderProfilesSettingsList(); checkSupabaseStatus(); }
 
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebarOv').classList.remove('visible');
@@ -1437,6 +1584,9 @@ function goStep(n, silent) {
   });
 }
 
+// ============================================================
+// SAVE ENTRY — Sheets-first strategy
+// ============================================================
 async function saveEntry() {
   curEntry.freeNote = document.getElementById('freeNote').value;
   curEntry.causeDesc = document.getElementById('causeDesc').value;
@@ -1462,22 +1612,19 @@ async function saveEntry() {
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = '⏳ Сохранение...';
 
-  // Add to cache immediately
-  entries.unshift(entry);
-  setCachedEntries(currentProfileId, entries);
-
-  // Send to Sheets
-  const url = getScriptUrl();
-  if (url) {
-    try {
-      const p = getProfile(currentProfileId);
-      await addEntryToSheets(entry, p.name);
-      showToast('✅ Запись сохранена в Sheets!');
-    } catch(e) {
-      showToast('⚠️ Сохранено локально, синхронизируйте позже');
-    }
-  } else {
-    showToast('✅ Запись сохранена!');
+  setSyncStatus('syncing', 'Сохранение...');
+  try {
+    await sbInsert('entries', entryToRow(entry, currentProfileId));
+    entries.unshift(entry);
+    setCachedEntries(currentProfileId, entries);
+    setSyncStatus('synced');
+    showToast('✅ Сохранено в Supabase!');
+  } catch(e) {
+    pendingQueue.unshift(entry);
+    savePendingQueue(currentProfileId, pendingQueue);
+    setSyncStatus('error', 'Нет связи');
+    updatePendingUI();
+    showToast('📥 Нет связи — сохранено локально, отправится автоматически');
   }
 
   btn.disabled = false; btn.textContent = '💾 Сохранить';
@@ -1493,7 +1640,7 @@ function getFiltered(period) {
   else if(period==='week')cut.setDate(now.getDate()-7);
   else if(period==='2weeks')cut.setDate(now.getDate()-14);
   else if(period==='month')cut.setDate(now.getDate()-30);
-  return entries.filter(e=>new Date(e.timestamp)>=cut);
+  return getAllEntries().filter(e=>new Date(e.timestamp)>=cut);
 }
 
 function renderDashboard() {
@@ -1524,13 +1671,14 @@ function renderDashboard() {
     sub.textContent=`${Math.round(pos/tot*100)}% позитива · ${Math.round(neg/tot*100)}% негатива`;
   }
 
-  // Mini bar chart
+  // Mini bar chart (all entries, last 7 days)
+  const allE = getAllEntries();
   const chart=document.getElementById('miniChart');
   const days=[];
   for(let i=6;i>=0;i--){
     const d=new Date();d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
     const nx=new Date(d);nx.setDate(nx.getDate()+1);
-    const de=entries.filter(e=>{const t=new Date(e.timestamp);return t>=d&&t<nx;});
+    const de=allE.filter(e=>{const t=new Date(e.timestamp);return t>=d&&t<nx;});
     days.push({lbl:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d.getDay()],entries:de});
   }
   const maxC=Math.max(...days.map(d=>d.entries.length),1);
@@ -1556,9 +1704,12 @@ function renderDashboard() {
     :'<div class="empty-state"><div class="big">🌱</div><p>Нет данных за этот период</p></div>';
 
   // Recent
-  document.getElementById('recentList').innerHTML=entries.slice(0,5).length
-    ?entries.slice(0,5).map(entryHtml).join('')
+  const recent=getAllEntries().slice(0,5);
+  document.getElementById('recentList').innerHTML=recent.length
+    ?recent.map(entryHtml).join('')
     :'<div class="empty-state"><div class="big">📝</div><p>Нет записей. Нажмите ✍️!</p></div>';
+
+  updatePendingUI();
 }
 
 // ============================================================
@@ -1569,11 +1720,12 @@ function entryHtml(e) {
   const main=e.emotions[0]||{e:'❓',l:'',cat:'neutral'};
   const more=e.emotions.length>1?` +${e.emotions.length-1}`:'';
   const catL={positive:'Позитивная',negative:'Негативная',neutral:'Нейтральная'};
-  return `<div class="entry-card">
+  const pendingMark=e._pending?`<span class="entry-pending-badge">⏳ не отправлено</span>`:'';
+  return `<div class="entry-card${e._pending?' pending':''}">
     <div class="entry-time">${time}</div>
     <div class="entry-icon">${main.e}</div>
     <div class="entry-body">
-      <div class="entry-ename">${main.l}${more}</div>
+      <div class="entry-ename">${main.l}${more}${pendingMark}</div>
       ${e.causes.length?`<div class="entry-cause">📍 ${e.causes.join(', ')}</div>`:''}
       ${e.freeNote?`<div class="entry-note">${e.freeNote.slice(0,88)}${e.freeNote.length>88?'...':''}</div>`:''}
       <span class="entry-badge ${e.category}">${catL[e.category]}</span>
@@ -1583,7 +1735,8 @@ function entryHtml(e) {
 
 function renderHistory() {
   const filter=document.getElementById('histFilter').value;
-  const filtered=filter==='all'?entries:entries.filter(e=>e.category===filter);
+  const all=getAllEntries();
+  const filtered=filter==='all'?all:all.filter(e=>e.category===filter);
   if(!filtered.length){document.getElementById('histList').innerHTML='<div class="empty-state"><div class="big">📖</div><p>Нет записей</p></div>';return;}
   const groups={};
   filtered.forEach(e=>{
@@ -1600,11 +1753,12 @@ function renderHistory() {
 function renderAnalytics() {
   const days=currentAnalyticsPeriod==='week'?7:currentAnalyticsPeriod==='2weeks'?14:30;
   const step=days<=14?1:3;
+  const allE=getAllEntries();
   const cols=[];
   for(let i=days-1;i>=0;i-=step){
     const d=new Date();d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
     const end=new Date(d);end.setDate(end.getDate()+step);
-    const ce=entries.filter(e=>{const t=new Date(e.timestamp);return t>=d&&t<end;});
+    const ce=allE.filter(e=>{const t=new Date(e.timestamp);return t>=d&&t<end;});
     cols.push({
       lbl:days<=7?['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d.getDay()]:`${d.getDate()}.${String(d.getMonth()+1).padStart(2,'0')}`,
       pos:ce.filter(e=>e.category==='positive').length,
@@ -1624,7 +1778,7 @@ function renderAnalytics() {
   }).join('');
 
   const cut=new Date();cut.setDate(cut.getDate()-days);
-  const pe=entries.filter(e=>new Date(e.timestamp)>=cut);
+  const pe=allE.filter(e=>new Date(e.timestamp)>=cut);
   const posC={},negC={};
   pe.forEach(e=>{
     e.emotions.filter(em=>em.cat==='positive').forEach(em=>{posC[em.l]=(posC[em.l]||0)+1;});
@@ -1646,7 +1800,7 @@ async function sendAI() {
 }
 
 async function getAIAnalysis() {
-  const slice=entries.slice(0,20);
+  const slice=getAllEntries().slice(0,20);
   if(!slice.length){addMsg('Нет записей для анализа. Добавьте несколько записей!','ai');return;}
   const p=getProfile(currentProfileId);
   const summary=slice.map(e=>{
@@ -1666,7 +1820,7 @@ async function callClaude(msg) {
   try{
     const r=await fetch('https://cookbook-proxy.nataliya-krivosheya-diskurs.workers.dev/',{
       method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
         system:'Ты тёплый психологический помощник. Анализируешь эмоциональный дневник и даёшь практичные рекомендации. По-русски, поддерживающе.',
         messages:[{role:'user',content:msg}]})
     });
@@ -1694,16 +1848,21 @@ function buildAvatarGrid(containerId, selected, onSelect) {
 function renderProfilesSettingsList() {
   document.getElementById('profilesSettingsList').innerHTML=profiles.map(p=>{
     const count=getCachedEntries(p.id).length;
+    const pending=loadPendingQueue(p.id).length;
     const isCur=p.id===currentProfileId;
     return `<div class="psc">
       <div class="psc-av">${p.avatar}</div>
       <div class="psc-info">
         <div class="psc-name">${p.name} ${isCur?'<span style="font-size:0.68rem;color:var(--accent)">• текущий</span>':''}</div>
-        <div class="psc-meta">${count} записей · PIN: ${p.pin?'установлен':'не установлен'}</div>
+        <div class="psc-meta">${count} записей · PIN: ${p.pin?'установлен':'не установлен'}${pending>0?` · ⚠️ ${pending} не отправлено`:''}</div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="openEditModal('${p.id}')">✏️</button>
     </div>`;
   }).join('');
+
+  // Update pending count in settings
+  const countDesc = document.getElementById('pendingCountDesc');
+  if (countDesc) countDesc.textContent = `Записей ожидает отправки: ${pendingQueue.length}`;
 }
 
 function openEditModal(profileId) {
@@ -1752,7 +1911,8 @@ function saveApiKey(){
 function copyGas(){navigator.clipboard.writeText(GAS_CODE).then(()=>showToast('📋 Код скопирован!'));}
 
 function exportData(){
-  const blob=new Blob([JSON.stringify(entries,null,2)],{type:'application/json'});
+  const all=getAllEntries();
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;a.download='diary-'+currentProfileId+'-'+new Date().toISOString().split('T')[0]+'.json';
@@ -1772,16 +1932,17 @@ function clearCache(){
 function exportPDF(){
   const p=getProfile(currentProfileId);
   const catL={positive:'Позитивная',negative:'Негативная',neutral:'Нейтральная'};
-  const pos=entries.filter(e=>e.category==='positive').length;
-  const neg=entries.filter(e=>e.category==='negative').length;
-  const neu=entries.filter(e=>e.category==='neutral').length;
+  const all=getAllEntries();
+  const pos=all.filter(e=>e.category==='positive').length;
+  const neg=all.filter(e=>e.category==='negative').length;
+  const neu=all.filter(e=>e.category==='neutral').length;
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>body{font-family:Georgia,serif;max-width:800px;margin:0 auto;padding:40px;color:#1a1828}h1{color:#c17b4e;border-bottom:2px solid #c17b4e;padding-bottom:10px}.stats{display:flex;gap:16px;margin:20px 0}.stat{padding:14px;border-radius:8px;text-align:center;flex:1}.stat.t{background:#f5f0eb}.stat.p{background:#d4edd9}.stat.n{background:#f5d8d6}.stat.u{background:#d6e4f5}.sn{font-size:1.8rem;font-weight:bold}.entry{margin:10px 0;padding:14px;border:1px solid #e8ddd4;border-radius:8px;page-break-inside:avoid}.eh{font-weight:bold;margin-bottom:5px}.em{font-size:0.82rem;color:#8a7a72;margin:3px 0}.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:0.76rem;font-weight:bold}.badge.positive{background:#d4edd9;color:#5a9e6f}.badge.negative{background:#f5d8d6;color:#c0504a}.badge.neutral{background:#d6e4f5;color:#6b8cba}</style>
 </head><body>
 <h1>📊 Отчёт: ${p?.avatar||''} ${p?.name||''}</h1>
 <p>Сформирован: ${new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'})}</p>
-<div class="stats"><div class="stat t"><div class="sn">${entries.length}</div><div>Всего</div></div><div class="stat p"><div class="sn">${pos}</div><div>Позитивных</div></div><div class="stat n"><div class="sn">${neg}</div><div>Негативных</div></div><div class="stat u"><div class="sn">${neu}</div><div>Нейтральных</div></div></div>
-${entries.slice(0,60).map(e=>{
+<div class="stats"><div class="stat t"><div class="sn">${all.length}</div><div>Всего</div></div><div class="stat p"><div class="sn">${pos}</div><div>Позитивных</div></div><div class="stat n"><div class="sn">${neg}</div><div>Негативных</div></div><div class="stat u"><div class="sn">${neu}</div><div>Нейтральных</div></div></div>
+${all.slice(0,60).map(e=>{
   const d=new Date(e.timestamp);
   return `<div class="entry"><div class="eh">${e.emotions.map(em=>em.e+' '+em.l).join(', ')} <span class="badge ${e.category}">${catL[e.category]}</span></div><div class="em">📅 ${d.toLocaleString('ru-RU')} · Интенсивность: ${e.intensity}/4 · Оценка: ${e.dayRating}/10</div>${e.causes.length?`<div class="em">📍 ${e.causes.join(', ')}</div>`:''} ${e.causeDesc?`<div class="em">💬 ${e.causeDesc}</div>`:''} ${e.freeNote?`<div style="margin-top:5px;font-style:italic;font-size:0.88rem">${e.freeNote}</div>`:''}</div>`;
 }).join('')}
@@ -1841,6 +2002,22 @@ document.querySelectorAll('.nav-item').forEach(item => {
   item.onclick = () => navigateWithHistory(item.dataset.page);
 });
 document.querySelector('.fab').onclick = () => navigateWithHistory('new-entry');
+
+// ============================================================
+// SUPABASE STATUS CHECK
+// ============================================================
+async function checkSupabaseStatus() {
+  const el = document.getElementById('supabaseStatus');
+  if (!el) return;
+  try {
+    await sbSelect('entries', 'limit=1');
+    el.innerHTML = '✅ <strong>Supabase подключён</strong> — данные хранятся в облаке и не зависят от браузера. Работает на телефоне, компьютере, планшете — везде.';
+    el.style.borderColor = 'var(--positive)';
+  } catch(e) {
+    el.innerHTML = '❌ Нет подключения к Supabase. Проверьте интернет.';
+    el.style.borderColor = 'var(--negative)';
+  }
+}
 
 // ============================================================
 // INIT
