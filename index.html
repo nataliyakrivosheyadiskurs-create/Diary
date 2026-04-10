@@ -493,12 +493,9 @@ body::before {
 
     <!-- Profile select -->
     <div id="profileSelectScreen">
-      <div id="noScriptBanner" class="error-banner">
-        ⚠️ URL Google Apps Script не настроен. Перейдите в настройки и добавьте URL.
-      </div>
-      <div class="profiles-grid" id="profilesGrid"></div>
+<div class="profiles-grid" id="profilesGrid"></div>
       <div style="text-align:center;margin-top:14px">
-        <button class="btn btn-secondary btn-sm" onclick="openSettings()">⚙️ Настройки</button>
+        <button class="btn btn-secondary btn-sm" onclick="showApp();navigate('settings')">⚙️ Настройки</button>
       </div>
     </div>
 
@@ -588,19 +585,7 @@ body::before {
       </div>
     </div>
 
-    <!-- Quick settings (when no script URL) -->
-    <div id="quickSettings" style="display:none">
-      <div class="pin-back" onclick="document.getElementById('quickSettings').style.display='none';document.getElementById('profileSelectScreen').style.display='block'">← Назад</div>
-      <div class="setup-card">
-        <div class="setup-title">Настройки</div>
-        <div class="setup-sub">Введите URL Google Apps Script для работы приложения</div>
-        <div class="form-group">
-          <label class="form-label">URL Apps Script</label>
-          <input class="form-input" id="qs_url" placeholder="https://script.google.com/macros/s/...">
-        </div>
-        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveQsUrl()">Сохранить</button>
-      </div>
-    </div>
+
   </div>
 </div>
 
@@ -1073,7 +1058,6 @@ function saveProfiles() {
 }
 
 function getProfile(id) { return profiles.find(p => p.id === id); }
-function getScriptUrl() { return localStorage.getItem('emo3_script_url') || ''; }
 function getApiKey() { return localStorage.getItem('emo3_api_key') || ''; }
 
 // Cache = confirmed entries from Sheets
@@ -1129,7 +1113,7 @@ function updatePendingUI() {
 
   if (badge) { badge.textContent = count > 0 ? count : ''; badge.classList.toggle('show', count > 0); }
   if (banner) banner.classList.toggle('show', count > 0);
-  if (bannerText) bannerText.textContent = `⚠️ ${count} запис${count===1?'ь':count<5?'и':'ей'} ожидают отправки в Google Sheets`;
+  if (bannerText) bannerText.textContent = `⚠️ ${count} запис${count===1?'ь':count<5?'и':'ей'} ожидают отправки в Supabase`;
   if (countDesc) countDesc.textContent = `Записей ожидает отправки: ${count}`;
 }
 
@@ -1201,9 +1185,6 @@ async function flushPending() {
 // LOCK SCREEN
 // ============================================================
 function renderProfilesGrid() {
-  const url = getScriptUrl();
-  document.getElementById('noScriptBanner').classList.toggle('show', !url);
-
   const grid = document.getElementById('profilesGrid');
   const colors = ['rgba(232,149,107,0.12)','rgba(123,174,232,0.12)','rgba(110,207,142,0.12)','rgba(200,150,232,0.12)'];
   grid.innerHTML = profiles.map((p,i) => {
@@ -1219,22 +1200,11 @@ function renderProfilesGrid() {
   }).join('');
 }
 
-function openSettings() {
   document.getElementById('profileSelectScreen').style.display = 'none';
   document.getElementById('quickSettings').style.display = 'block';
-  const url = getScriptUrl();
-  if (url) document.getElementById('qs_url').value = url;
 }
 
-function saveQsUrl() {
-  const url = document.getElementById('qs_url').value.trim();
-  if (!url) { showToast('Введите URL'); return; }
-  localStorage.setItem('emo3_script_url', url);
-  document.getElementById('quickSettings').style.display = 'none';
-  document.getElementById('profileSelectScreen').style.display = 'block';
-  renderProfilesGrid();
-  showToast('✅ URL сохранён!');
-}
+
 
 function backToProfiles() {
   document.getElementById('pinScreen').style.display = 'none';
@@ -1377,9 +1347,6 @@ async function enterApp(profileId) {
   document.getElementById('su_sidebar').textContent = p.avatar;
   document.getElementById('sun_sidebar').textContent = p.name;
 
-  // Load settings inputs
-  const surl = getScriptUrl();
-  if (surl) document.getElementById('scriptUrlInput').value = surl;
   const key = getApiKey();
   if (key) document.getElementById('apiKeyInput').value = key;
   updateTopBar();
@@ -1390,7 +1357,7 @@ async function enterApp(profileId) {
   renderProfilesSettingsList();
 
   // Auto-sync every 5 minutes if online
-  setInterval(() => { if (getScriptUrl()) syncNow(true); }, 5 * 60 * 1000);
+  setInterval(() => syncNow(true), 5 * 60 * 1000);
 }
 
 function lockApp() {
@@ -1409,9 +1376,6 @@ function lockApp() {
 // ============================================================
 async function syncNow(silent = false) {
   if (!currentProfileId) return;
-  const url = getScriptUrl();
-  if (!url) { if (!silent) showToast('⚠️ URL не настроен'); return; }
-
   const btn = document.getElementById('syncBtn');
   btn.classList.add('syncing');
   setSyncStatus('syncing');
