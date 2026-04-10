@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Эмодневник</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f0e17">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Эмодневник">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root {
+  --bg: #0f0e17;
+  --surface: #1a1828;
+  --surface2: #221f35;
+  --surface3: #2a2740;
+  --border: #332f4a;
+  --text: #f0ece8;
+  --text-muted: #7b7694;
+  --text-dim: #4a4665;
+  --accent: #e8956b;
+  --accent-dim: rgba(232,149,107,0.15);
+  --positive: #6ecf8e;
+  --positive-dim: rgba(110,207,142,0.15);
+  --negative: #e8607a;
+  --negative-dim: rgba(232,96,122,0.15);
+  --neutral: #7baee8;
+  --neutral-dim: rgba(123,174,232,0.15);
+  --warning: #f0c060;
+  --warning-dim: rgba(240,192,96,0.15);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 32px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; top: -30%; left: -20%;
+  width: 80vw; height: 80vh;
+  background: radial-gradient(ellipse, rgba(232,149,107,0.04) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ======== LOCK SCREEN ======== */
+#lockScreen {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); padding: 20px;
+}
+
+.lock-wrap { width: 100%; max-width: 440px; animation: fadeUp 0.5s ease; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.lock-logo {
+  text-align: center; margin-bottom: 36px;
+}
+.lock-logo h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.2rem; font-weight: 300; color: var(--accent);
+  letter-spacing: 0.04em; margin-bottom: 4px;
+}
+.lock-logo p { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; }
+
+#setupScreen { display: none; }
+#profileSelectScreen {}
+
+.setup-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px;
+}
+
+.setup-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem; margin-bottom: 6px; color: var(--text);
+}
+.setup-sub { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 24px; }
+
+.profiles-grid {
+  display: grid; grid-template-columns: repeat(2,1fr); gap: 12px;
+}
+
+.profile-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 14px;
+  text-align: center; cursor: pointer; transition: all 0.2s;
+  position: relative;
+}
+.profile-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(232,149,107,0.15); }
+.pcard-lock { position: absolute; top: 8px; right: 10px; font-size: 0.72rem; color: var(--text-dim); }
+.pcard-avatar { font-size: 1.8rem; margin-bottom: 8px; }
+.pcard-name { font-size: 0.88rem; font-weight: 500; margin-bottom: 2px; }
+.pcard-meta { font-size: 0.72rem; color: var(--text-muted); }
+
+#pinScreen { display: none; }
+.pin-back { display: flex; align-items: center; gap: 8px; color: var(--text-muted); cursor: pointer; font-size: 0.83rem; margin-bottom: 24px; transition: color 0.2s; width: fit-content; }
+.pin-back:hover { color: var(--text); }
+.pin-profile { text-align: center; margin-bottom: 28px; }
+.pin-avatar { font-size: 2.2rem; margin-bottom: 8px; }
+.pin-name { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; margin-bottom: 4px; }
+.pin-hint { font-size: 0.8rem; color: var(--text-muted); }
+
+.pin-dots { display: flex; justify-content: center; gap: 14px; margin-bottom: 28px; }
+.pin-dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--border); transition: all 0.2s; }
+.pin-dot.filled { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(232,149,107,0.45); }
+.pin-dot.error { background: var(--negative); border-color: var(--negative); animation: shake 0.3s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+.pin-keypad { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; max-width: 270px; margin: 0 auto; }
+.pin-key {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 15px; text-align: center;
+  cursor: pointer; font-size: 1.1rem; font-weight: 500; color: var(--text);
+  font-family: inherit; transition: all 0.15s; user-select: none;
+}
+.pin-key:hover { background: var(--surface2); border-color: var(--accent); }
+.pin-key:active { transform: scale(0.93); }
+.pin-key.ghost { background: transparent; border: none; cursor: default; }
+.pin-key.ghost:hover { background: transparent; border: none; }
+.pin-key.del { color: var(--text-muted); }
+.pin-error { text-align: center; color: var(--negative); font-size: 0.8rem; margin-top: 14px; min-height: 18px; }
+
+.setup-step { display: none; }
+.setup-step.active { display: block; }
+
+.avatar-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.avatar-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 2px solid var(--border); background: var(--surface2);
+  font-size: 1.3rem; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.avatar-btn.sel { border-color: var(--accent); background: var(--accent-dim); }
+
+/* ======== LOADING OVERLAY ======== */
+#loadingOverlay {
+  position: fixed; inset: 0; background: var(--bg);
+  z-index: 900; display: none; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+}
+#loadingOverlay.show { display: flex; }
+.spinner {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 3px solid var(--border); border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 0.85rem; color: var(--text-muted); }
+
+/* ======== MAIN APP ======== */
+#mainApp { display: none; min-height: 100vh; position: relative; z-index: 1; }
+
+.sidebar {
+  width: 228px; background: var(--surface); border-right: 1px solid var(--border);
+  position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+  display: flex; flex-direction: column; transition: transform 0.3s ease;
+}
+.sidebar-top { padding: 22px 18px 18px; border-bottom: 1px solid var(--border); }
+.sidebar-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; color: var(--accent); margin-bottom: 13px; }
+.sidebar-user {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px; background: var(--surface2);
+  border-radius: var(--radius-sm); cursor: pointer;
+  border: 1px solid var(--border); transition: all 0.2s;
+}
+.sidebar-user:hover { border-color: var(--accent); }
+.su-avatar { font-size: 1.1rem; }
+.su-name { font-size: 0.83rem; font-weight: 500; flex: 1; }
+.su-lock { font-size: 0.72rem; color: var(--text-muted); }
+
+.sidebar-nav { flex: 1; padding: 14px 0; overflow-y: auto; }
+.nav-section { padding: 10px 18px 3px; font-size: 0.63rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); font-weight: 600; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 18px; cursor: pointer; font-size: 0.84rem;
+  color: var(--text-muted); transition: all 0.2s;
+  border-left: 2px solid transparent;
+}
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-dim); font-weight: 500; }
+.nav-icon { font-size: 0.95rem; width: 17px; text-align: center; }
+
+/* Unsaved badge on nav item */
+.nav-badge {
+  margin-left: auto; background: var(--warning); color: #0f0e17;
+  font-size: 0.62rem; font-weight: 700; padding: 1px 6px;
+  border-radius: 8px; display: none;
+}
+.nav-badge.show { display: block; }
+
+.main { margin-left: 228px; min-height: 100vh; display: flex; flex-direction: column; }
+
+.topbar {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 13px 26px; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; }
+.topbar-right { display: flex; align-items: center; gap: 10px; font-size: 0.78rem; color: var(--text-muted); }
+.hamburger { display: none; background: none; border: none; color: var(--text); font-size: 1.3rem; cursor: pointer; padding: 3px; }
+
+/* Sync status indicator */
+.sync-status {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.73rem; padding: 4px 10px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text-muted);
+  white-space: nowrap;
+}
+.sync-status .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-dim); flex-shrink: 0;
+}
+.sync-status.synced .dot { background: var(--positive); }
+.sync-status.syncing .dot { background: var(--warning); animation: pulse 1s infinite; }
+.sync-status.error .dot { background: var(--negative); }
+.sync-status.offline .dot { background: var(--text-dim); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.sync-btn {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 5px 10px; font-size: 0.76rem; color: var(--text-muted);
+  cursor: pointer; font-family: inherit; transition: all 0.2s;
+  display: flex; align-items: center; gap: 5px;
+}
+.sync-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sync-btn.syncing .sync-icon { animation: spin 1s linear infinite; display: inline-block; }
+
+.content { flex: 1; padding: 26px; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+/* Pending banner */
+.pending-banner {
+  background: var(--warning-dim); border: 1px solid var(--warning);
+  border-radius: var(--radius-sm); padding: 11px 14px;
+  font-size: 0.82rem; color: var(--warning); margin-bottom: 16px;
+  display: none; align-items: center; justify-content: space-between; gap: 10px;
+}
+.pending-banner.show { display: flex; }
+
+/* ======== PAGES ======== */
+.page { display: none; animation: fadeUp 0.3s ease; }
+.page.active { display: block; }
+
+/* ======== UI COMPONENTS ======== */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-weight: 400; margin-bottom: 15px; }
+
+.period-tabs { display: flex; gap: 3px; background: var(--surface2); border-radius: var(--radius-sm); padding: 3px; margin-bottom: 20px; }
+.period-tab { flex: 1; padding: 6px 4px; border-radius: 7px; cursor: pointer; font-size: 0.77rem; font-weight: 500; color: var(--text-muted); transition: all 0.2s; border: none; background: none; font-family: inherit; text-align: center; }
+.period-tab.active { background: var(--surface3); color: var(--accent); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 11px; margin-bottom: 18px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; position: relative; overflow: hidden; }
+.stat-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; }
+.stat-card.total::after { background: var(--accent); }
+.stat-card.pos::after { background: var(--positive); }
+.stat-card.neg::after { background: var(--negative); }
+.stat-card.neu::after { background: var(--neutral); }
+.stat-emoji { font-size: 1.2rem; margin-bottom: 7px; }
+.stat-value { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 600; line-height: 1; margin-bottom: 2px; }
+.stat-card.total .stat-value { color: var(--accent); }
+.stat-card.pos .stat-value { color: var(--positive); }
+.stat-card.neg .stat-value { color: var(--negative); }
+.stat-card.neu .stat-value { color: var(--neutral); }
+.stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+.mood-indicator { display: flex; flex-direction: column; align-items: center; gap: 9px; padding: 10px 0; }
+.mood-circle { width: 82px; height: 82px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; }
+.mood-circle.positive { background: var(--positive-dim); box-shadow: 0 0 28px rgba(110,207,142,0.2); }
+.mood-circle.negative { background: var(--negative-dim); box-shadow: 0 0 28px rgba(232,96,122,0.2); }
+.mood-circle.neutral { background: var(--neutral-dim); box-shadow: 0 0 28px rgba(123,174,232,0.2); }
+.mood-circle.empty { background: var(--surface2); }
+.mood-label { font-size: 0.95rem; font-weight: 500; }
+.mood-sub { font-size: 0.76rem; color: var(--text-muted); text-align: center; }
+
+.bar-chart { display: flex; align-items: flex-end; gap: 5px; height: 68px; padding: 3px 0; }
+.bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; }
+.bar-bars { display: flex; align-items: flex-end; gap: 2px; flex: 1; width: 100%; justify-content: center; }
+.bar { width: 6px; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.5s ease; }
+.bar.p { background: var(--positive); }
+.bar.n { background: var(--negative); }
+.bar.u { background: var(--neutral); }
+.bar-lbl { font-size: 0.6rem; color: var(--text-dim); }
+
+.legend { display: flex; gap: 12px; margin-top: 9px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.73rem; color: var(--text-muted); }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+.emo-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 18px; font-size: 0.78rem; font-weight: 500; margin: 2px; }
+.emo-tag.positive { background: var(--positive-dim); color: var(--positive); }
+.emo-tag.negative { background: var(--negative-dim); color: var(--negative); }
+.emo-tag.neutral { background: var(--neutral-dim); color: var(--neutral); }
+.emo-tag .cnt { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 1px 5px; font-size: 0.68rem; }
+
+.entry-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 9px; display: flex; gap: 12px; transition: all 0.2s; position: relative; }
+.entry-card:hover { border-color: var(--accent); background: var(--surface2); }
+.entry-card.pending { border-left: 3px solid var(--warning); }
+.entry-time { font-size: 0.7rem; color: var(--text-muted); min-width: 44px; padding-top: 2px; }
+.entry-icon { font-size: 1.6rem; flex-shrink: 0; }
+.entry-body { flex: 1; }
+.entry-ename { font-weight: 500; font-size: 0.88rem; margin-bottom: 2px; }
+.entry-cause { font-size: 0.77rem; color: var(--text-muted); margin-bottom: 4px; }
+.entry-note { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; font-style: italic; }
+.entry-badge { font-size: 0.68rem; padding: 2px 7px; border-radius: 8px; font-weight: 600; display: inline-block; margin-top: 4px; }
+.entry-badge.positive { background: var(--positive-dim); color: var(--positive); }
+.entry-badge.negative { background: var(--negative-dim); color: var(--negative); }
+.entry-badge.neutral { background: var(--neutral-dim); color: var(--neutral); }
+.entry-pending-badge { font-size: 0.66rem; padding: 1px 6px; border-radius: 6px; background: var(--warning-dim); color: var(--warning); display: inline-block; margin-left: 5px; }
+
+.date-header { font-family: 'Cormorant Garamond', serif; font-size: 0.92rem; color: var(--text-muted); margin: 16px 0 7px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+
+.empty-state { text-align: center; padding: 36px 20px; color: var(--text-muted); }
+.empty-state .big { font-size: 2.5rem; margin-bottom: 9px; }
+.empty-state p { font-size: 0.86rem; }
+
+/* ======== NEW ENTRY ======== */
+.step-progress { margin-bottom: 22px; }
+.progress-track { width: 100%; height: 2px; background: var(--surface3); border-radius: 2px; margin-bottom: 9px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #f0b896); border-radius: 2px; transition: width 0.4s ease; }
+.step-labels { display: flex; justify-content: space-between; }
+.step-lbl { font-size: 0.68rem; color: var(--text-dim); transition: color 0.3s; }
+.step-lbl.active { color: var(--accent); }
+.step-lbl.done { color: var(--positive); }
+
+.step-form { display: none; }
+.step-form.active { display: block; animation: fadeUp 0.25s ease; }
+
+.emo-cat { margin-bottom: 18px; }
+.emo-cat-title { display: flex; align-items: center; gap: 7px; font-size: 0.77rem; font-weight: 600; margin-bottom: 9px; text-transform: uppercase; letter-spacing: 0.08em; }
+.emo-cat-title.positive { color: var(--positive); }
+.emo-cat-title.negative { color: var(--negative); }
+.emo-cat-title.neutral { color: var(--neutral); }
+.emos-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.emo-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 12px; border-radius: 11px; border: 1.5px solid var(--border); background: var(--surface2); cursor: pointer; transition: all 0.2s; font-size: 0.74rem; color: var(--text-muted); font-family: inherit; min-width: 72px; }
+.emo-btn:hover { border-color: var(--text-muted); color: var(--text); transform: translateY(-2px); }
+.emo-btn .em { font-size: 1.4rem; }
+.emo-btn.selected.positive { border-color: var(--positive); background: var(--positive-dim); color: var(--positive); }
+.emo-btn.selected.negative { border-color: var(--negative); background: var(--negative-dim); color: var(--negative); }
+.emo-btn.selected.neutral { border-color: var(--neutral); background: var(--neutral-dim); color: var(--neutral); }
+
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--text); margin-bottom: 7px; }
+.form-label span { color: var(--text-muted); font-weight: 400; }
+.form-input, .form-textarea, .form-select { width: 100%; padding: 10px 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); font-family: inherit; font-size: 0.86rem; transition: border-color 0.2s; outline: none; }
+.form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.form-textarea { resize: vertical; min-height: 78px; }
+
+.chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 5px 11px; border-radius: 18px; border: 1.5px solid var(--border); background: var(--surface2); cursor: pointer; font-size: 0.78rem; font-weight: 500; color: var(--text-muted); transition: all 0.2s; font-family: inherit; }
+.chip:hover { border-color: var(--text-muted); color: var(--text); }
+.chip.sel { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+.intensity-row { display: flex; gap: 7px; }
+.intensity-btn { flex: 1; padding: 9px 5px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--surface2); cursor: pointer; text-align: center; font-size: 0.76rem; font-weight: 500; color: var(--text-muted); transition: all 0.2s; font-family: inherit; line-height: 1.4; }
+.intensity-btn.sel { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+.btn { padding: 10px 20px; border-radius: var(--radius-sm); border: none; font-family: inherit; font-size: 0.86rem; font-weight: 500; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--accent); color: #0f0e17; font-weight: 600; }
+.btn-primary:hover { background: #f0a87c; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,149,107,0.38); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-secondary { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+.btn-secondary:hover { color: var(--text); border-color: var(--text-muted); }
+.btn-outline { background: transparent; border: 1.5px solid var(--accent); color: var(--accent); }
+.btn-outline:hover { background: var(--accent-dim); }
+.btn-sm { padding: 6px 13px; font-size: 0.78rem; }
+.btn-danger { background: var(--negative-dim); color: var(--negative); border: 1px solid var(--negative); }
+.btn-group { display: flex; gap: 9px; justify-content: space-between; margin-top: 22px; }
+
+/* ======== ANALYTICS ======== */
+.achart { height: 120px; display: flex; align-items: flex-end; gap: 4px; padding: 3px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+.acol { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; justify-content: flex-end; }
+.astack { width: 100%; display: flex; flex-direction: column; gap: 1px; max-width: 30px; }
+.aseg { border-radius: 2px; transition: height 0.5s ease; }
+.aseg.p { background: var(--positive); }
+.aseg.n { background: var(--negative); }
+.aseg.u { background: var(--neutral); }
+.acol-lbl { font-size: 0.6rem; color: var(--text-dim); }
+
+.rank-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--surface2); font-size: 0.82rem; }
+.rank-item:last-child { border-bottom: none; }
+.rank-val { font-weight: 600; font-size: 0.86rem; }
+.rank-val.p { color: var(--positive); }
+.rank-val.n { color: var(--negative); }
+
+/* ======== AI ======== */
+.ai-chat { display: flex; flex-direction: column; gap: 9px; max-height: 360px; overflow-y: auto; padding: 3px 0; }
+.chat-msg { display: flex; gap: 8px; align-items: flex-start; }
+.chat-msg.user { flex-direction: row-reverse; }
+.chat-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.88rem; flex-shrink: 0; }
+.chat-msg.ai .chat-av { background: var(--accent-dim); }
+.chat-msg.user .chat-av { background: var(--positive-dim); }
+.chat-bubble { padding: 8px 12px; border-radius: 10px; font-size: 0.82rem; line-height: 1.5; max-width: 82%; }
+.chat-msg.ai .chat-bubble { background: var(--surface2); border: 1px solid var(--border); border-radius: 3px 10px 10px 10px; }
+.chat-msg.user .chat-bubble { background: var(--accent); color: #0f0e17; border-radius: 10px 3px 10px 10px; }
+.typing-ind { display: flex; gap: 3px; align-items: center; padding: 5px 8px; }
+.tdot { width: 5px; height: 5px; background: var(--text-muted); border-radius: 50%; animation: tb 1.2s infinite; }
+.tdot:nth-child(2){animation-delay:0.2s} .tdot:nth-child(3){animation-delay:0.4s}
+@keyframes tb { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+.ai-input-row { display: flex; gap: 7px; margin-top: 11px; }
+.ai-input-row input { flex: 1; }
+
+/* ======== SETTINGS ======== */
+.settings-title { font-family: 'Cormorant Garamond', serif; font-size: 1rem; margin-bottom: 13px; padding-bottom: 7px; border-bottom: 1px solid var(--border); }
+.settings-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--surface2); }
+.settings-row-lbl { font-size: 0.84rem; }
+.settings-row-desc { font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; }
+.code-block { background: #0a0912; color: #c9c3f5; padding: 13px; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.72rem; overflow-x: auto; margin-top: 10px; border: 1px solid var(--border); line-height: 1.6; white-space: pre; }
+.info-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 13px; font-size: 0.8rem; line-height: 1.8; margin-top: 11px; color: var(--text-muted); }
+
+.psc { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 9px; }
+.psc-av { font-size: 1.3rem; }
+.psc-info { flex: 1; }
+.psc-name { font-weight: 500; font-size: 0.87rem; }
+.psc-meta { font-size: 0.73rem; color: var(--text-muted); margin-top: 2px; }
+
+/* FAB */
+.fab { position: fixed; bottom: 22px; right: 22px; width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: #0f0e17; border: none; font-size: 1.4rem; cursor: pointer; box-shadow: 0 6px 22px rgba(232,149,107,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; transition: all 0.2s; }
+.fab:hover { transform: scale(1.08); box-shadow: 0 8px 28px rgba(232,149,107,0.62); }
+
+/* Overlay */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99; }
+
+/* Modal */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; display: none; align-items: center; justify-content: center; padding: 18px; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; width: 100%; max-width: 370px; box-shadow: var(--shadow); animation: fadeUp 0.3s ease; }
+.modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; margin-bottom: 16px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 86px; right: 22px; background: var(--surface3); color: var(--text); border: 1px solid var(--border); padding: 10px 16px; border-radius: var(--radius-sm); font-size: 0.82rem; z-index: 1000; opacity: 0; transform: translateY(7px); transition: all 0.3s; pointer-events: none; max-width: 260px; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* Error state */
+.error-banner { background: var(--negative-dim); border: 1px solid var(--negative); border-radius: var(--radius-sm); padding: 11px 14px; font-size: 0.82rem; color: var(--negative); margin-bottom: 16px; display: none; }
+.error-banner.show { display: block; }
+
+/* ======== RESPONSIVE ======== */
+@media (max-width: 860px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay.visible { display: block; }
+  .main { margin-left: 0; }
+  .hamburger { display: block; }
+  .content { padding: 16px; }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .dash-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .content { padding: 13px; }
+  .profiles-grid { grid-template-columns: repeat(2,1fr); }
+  .fab { bottom: 16px; right: 16px; }
+  .emo-btn { min-width: 66px; padding: 9px 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Загрузка данных...</div>
+</div>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-wrap">
+    <div class="lock-logo">
+      <h1>✦ Эмодневник</h1>
+      <p>Личный дневник эмоций</p>
+    </div>
+
+    <!-- Profile select -->
+    <div id="profileSelectScreen">
+      <div id="noScriptBanner" class="error-banner">
+        ⚠️ URL Google Apps Script не настроен. Перейдите в настройки и добавьте URL.
+      </div>
+      <div class="profiles-grid" id="profilesGrid"></div>
+      <div style="text-align:center;margin-top:14px">
+        <button class="btn btn-secondary btn-sm" onclick="openSettings()">⚙️ Настройки</button>
+      </div>
+    </div>
+
+    <!-- PIN screen -->
+    <div id="pinScreen">
+      <div class="pin-back" onclick="backToProfiles()">← Назад</div>
+      <div class="pin-profile">
+        <div class="pin-avatar" id="pinAv"></div>
+        <div class="pin-name" id="pinName"></div>
+        <div class="pin-hint" id="pinHint">Введите PIN-код</div>
+      </div>
+      <div class="pin-dots" id="pinDots">
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-keypad">
+        <button class="pin-key" onclick="kp('1')">1</button>
+        <button class="pin-key" onclick="kp('2')">2</button>
+        <button class="pin-key" onclick="kp('3')">3</button>
+        <button class="pin-key" onclick="kp('4')">4</button>
+        <button class="pin-key" onclick="kp('5')">5</button>
+        <button class="pin-key" onclick="kp('6')">6</button>
+        <button class="pin-key" onclick="kp('7')">7</button>
+        <button class="pin-key" onclick="kp('8')">8</button>
+        <button class="pin-key" onclick="kp('9')">9</button>
+        <button class="pin-key ghost"></button>
+        <button class="pin-key" onclick="kp('0')">0</button>
+        <button class="pin-key del" onclick="kd()">⌫</button>
+      </div>
+      <div class="pin-error" id="pinErr"></div>
+    </div>
+
+    <!-- Setup new PIN for profile -->
+    <div id="setupScreen">
+      <div class="setup-step active" id="ss1">
+        <div class="pin-back" onclick="backToProfiles()">← Назад</div>
+        <div class="setup-card">
+          <div class="setup-title" id="setupTitle">Настройка профиля</div>
+          <div class="setup-sub">Введите имя и выберите аватар</div>
+          <div class="form-group">
+            <label class="form-label">Имя</label>
+            <input class="form-input" id="setupNameInput" placeholder="Ваше имя..." maxlength="20">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Аватар</label>
+            <div class="avatar-grid" id="avatarGrid"></div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="setupNext(2)">Далее →</button>
+        </div>
+      </div>
+      <div class="setup-step" id="ss2">
+        <div class="pin-back" onclick="setupNext(1)">← Назад</div>
+        <div class="pin-profile">
+          <div class="pin-avatar" id="su_av"></div>
+          <div class="pin-name" id="su_name"></div>
+          <div class="pin-hint">Придумайте PIN-код</div>
+        </div>
+        <div class="pin-dots" id="setupDots">
+          <div class="pin-dot"></div><div class="pin-dot"></div>
+          <div class="pin-dot"></div><div class="pin-dot"></div>
+        </div>
+        <div class="pin-keypad">
+          <button class="pin-key" onclick="sp('1')">1</button><button class="pin-key" onclick="sp('2')">2</button><button class="pin-key" onclick="sp('3')">3</button>
+          <button class="pin-key" onclick="sp('4')">4</button><button class="pin-key" onclick="sp('5')">5</button><button class="pin-key" onclick="sp('6')">6</button>
+          <button class="pin-key" onclick="sp('7')">7</button><button class="pin-key" onclick="sp('8')">8</button><button class="pin-key" onclick="sp('9')">9</button>
+          <button class="pin-key ghost"></button><button class="pin-key" onclick="sp('0')">0</button><button class="pin-key del" onclick="sd()">⌫</button>
+        </div>
+      </div>
+      <div class="setup-step" id="ss3">
+        <div class="pin-back" onclick="setupNext(2)">← Назад</div>
+        <div class="pin-profile">
+          <div class="pin-avatar" id="su_av2"></div>
+          <div class="pin-name" id="su_name2"></div>
+          <div class="pin-hint">Повторите PIN-код</div>
+        </div>
+        <div class="pin-dots" id="confirmDots">
+          <div class="pin-dot"></div><div class="pin-dot"></div>
+          <div class="pin-dot"></div><div class="pin-dot"></div>
+        </div>
+        <div class="pin-keypad">
+          <button class="pin-key" onclick="cp('1')">1</button><button class="pin-key" onclick="cp('2')">2</button><button class="pin-key" onclick="cp('3')">3</button>
+          <button class="pin-key" onclick="cp('4')">4</button><button class="pin-key" onclick="cp('5')">5</button><button class="pin-key" onclick="cp('6')">6</button>
+          <button class="pin-key" onclick="cp('7')">7</button><button class="pin-key" onclick="cp('8')">8</button><button class="pin-key" onclick="cp('9')">9</button>
+          <button class="pin-key ghost"></button><button class="pin-key" onclick="cp('0')">0</button><button class="pin-key del" onclick="cd()">⌫</button>
+        </div>
+        <div class="pin-error" id="confErr"></div>
+      </div>
+    </div>
+
+    <!-- Quick settings (when no script URL) -->
+    <div id="quickSettings" style="display:none">
+      <div class="pin-back" onclick="document.getElementById('quickSettings').style.display='none';document.getElementById('profileSelectScreen').style.display='block'">← Назад</div>
+      <div class="setup-card">
+        <div class="setup-title">Настройки</div>
+        <div class="setup-sub">Введите URL Google Apps Script для работы приложения</div>
+        <div class="form-group">
+          <label class="form-label">URL Apps Script</label>
+          <input class="form-input" id="qs_url" placeholder="https://script.google.com/macros/s/...">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveQsUrl()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">✦ Эмодневник</div>
+      <div class="sidebar-user" onclick="lockApp()">
+        <div class="su-avatar" id="su_sidebar"></div>
+        <div class="su-name" id="sun_sidebar"></div>
+        <div class="su-lock">🔒</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Главное</div>
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span>Дашборд</div>
+      <div class="nav-item" data-page="new-entry"><span class="nav-icon">✍️</span>Новая запись<span class="nav-badge" id="pendingBadge"></span></div>
+      <div class="nav-item" data-page="history"><span class="nav-icon">📖</span>История</div>
+      <div class="nav-section">Аналитика</div>
+      <div class="nav-item" data-page="analytics"><span class="nav-icon">📊</span>Анализ</div>
+      <div class="nav-item" data-page="ai-assistant"><span class="nav-icon">🤖</span>ИИ-помощник</div>
+      <div class="nav-section">Прочее</div>
+      <div class="nav-item" data-page="settings"><span class="nav-icon">⚙️</span>Настройки</div>
+    </nav>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOv"></div>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="hamburger" id="hamburger">☰</button>
+      <div class="topbar-title" id="pageTitle">Дашборд</div>
+      <div class="topbar-right">
+        <div class="sync-status" id="syncStatus">
+          <span class="dot"></span>
+          <span id="syncStatusText">—</span>
+        </div>
+        <button class="sync-btn" onclick="syncNow()" id="syncBtn">
+          <span class="sync-icon">↻</span> Синхр.
+        </button>
+        <span id="topbarDate"></span>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- Pending banner (shown when there are unsynced entries) -->
+      <div class="pending-banner" id="pendingBanner">
+        <span id="pendingBannerText">⚠️ Есть несинхронизированные записи</span>
+        <button class="btn btn-sm" style="background:var(--warning);color:#0f0e17;border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:7px;padding:5px 11px;white-space:nowrap" onclick="syncNow()">Синхронизировать</button>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div style="margin-bottom:20px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.75rem;margin-bottom:3px" id="greeting"></div>
+          <div style="font-size:0.83rem;color:var(--text-muted)" id="greetingSub"></div>
+        </div>
+        <div class="period-tabs">
+          <button class="period-tab active" data-period="day">Сегодня</button>
+          <button class="period-tab" data-period="week">Неделя</button>
+          <button class="period-tab" data-period="2weeks">2 недели</button>
+          <button class="period-tab" data-period="month">Месяц</button>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card total"><div class="stat-emoji">📝</div><div class="stat-value" id="st0">0</div><div class="stat-label">Записей</div></div>
+          <div class="stat-card pos"><div class="stat-emoji">😊</div><div class="stat-value" id="st1">0</div><div class="stat-label">Позитивных</div></div>
+          <div class="stat-card neg"><div class="stat-emoji">😔</div><div class="stat-value" id="st2">0</div><div class="stat-label">Негативных</div></div>
+          <div class="stat-card neu"><div class="stat-emoji">😐</div><div class="stat-value" id="st3">0</div><div class="stat-label">Нейтральных</div></div>
+        </div>
+        <div class="dash-grid">
+          <div class="card">
+            <div class="card-title">Общее настроение</div>
+            <div class="mood-indicator">
+              <div class="mood-circle empty" id="moodCirc"><span id="moodEmo">❓</span></div>
+              <div class="mood-label" id="moodLbl">Нет данных</div>
+              <div class="mood-sub" id="moodSub">Добавьте первую запись</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Активность за 7 дней</div>
+            <div class="bar-chart" id="miniChart"></div>
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--positive)"></div>Позитив</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--negative)"></div>Негатив</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--neutral)"></div>Нейтраль</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:13px">
+          <div class="card-title">Частые эмоции</div>
+          <div id="topEmos"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Последние записи</div>
+          <div id="recentList"></div>
+        </div>
+      </div>
+
+      <!-- NEW ENTRY -->
+      <div class="page" id="page-new-entry">
+        <div class="step-progress">
+          <div class="progress-track"><div class="progress-fill" id="progFill" style="width:25%"></div></div>
+          <div class="step-labels">
+            <span class="step-lbl active" id="sl1">Эмоция</span>
+            <span class="step-lbl" id="sl2">Причина</span>
+            <span class="step-lbl" id="sl3">Влияние</span>
+            <span class="step-lbl" id="sl4">Заметка</span>
+          </div>
+        </div>
+        <div class="step-form active card" id="sf1">
+          <div class="card-title">Что вы сейчас чувствуете?</div>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px">Выберите одну или несколько эмоций</p>
+          <div id="emoPicker"></div>
+          <div class="btn-group"><div></div><button class="btn btn-primary" onclick="goStep(2)">Далее →</button></div>
+        </div>
+        <div class="step-form card" id="sf2">
+          <div class="card-title">Что вызвало эту эмоцию?</div>
+          <div class="form-group">
+            <div class="form-label">Сфера жизни</div>
+            <div class="chip-group" id="causeChips"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Опишите ситуацию <span>(необязательно)</span></label>
+            <textarea class="form-textarea" id="causeDesc" placeholder="Что произошло?"></textarea>
+          </div>
+          <div class="btn-group"><button class="btn btn-secondary" onclick="goStep(1)">← Назад</button><button class="btn btn-primary" onclick="goStep(3)">Далее →</button></div>
+        </div>
+        <div class="step-form card" id="sf3">
+          <div class="card-title">Как это на вас влияет?</div>
+          <div class="form-group">
+            <div class="form-label">Интенсивность</div>
+            <div class="intensity-row">
+              <button class="intensity-btn" data-v="1" onclick="selInt(this)">🌱<br>Слабо</button>
+              <button class="intensity-btn" data-v="2" onclick="selInt(this)">🌿<br>Умеренно</button>
+              <button class="intensity-btn sel" data-v="3" onclick="selInt(this)">🌳<br>Сильно</button>
+              <button class="intensity-btn" data-v="4" onclick="selInt(this)">🌊<br>Очень</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Влияние на состояние</div>
+            <div class="chip-group" id="impactChips">
+              <button class="chip" data-v="мешает сосредоточиться" onclick="toggleChip(this,'impact')">😵 Мешает фокусу</button>
+              <button class="chip" data-v="снижает продуктивность" onclick="toggleChip(this,'impact')">📉 Снижает продуктивность</button>
+              <button class="chip" data-v="даёт энергию" onclick="toggleChip(this,'impact')">⚡ Даёт энергию</button>
+              <button class="chip" data-v="хочется общаться" onclick="toggleChip(this,'impact')">💬 Хочется общаться</button>
+              <button class="chip" data-v="хочется побыть одной" onclick="toggleChip(this,'impact')">🧘 Хочется тишины</button>
+              <button class="chip" data-v="влияет на сон" onclick="toggleChip(this,'impact')">😴 Влияет на сон</button>
+              <button class="chip" data-v="вдохновляет" onclick="toggleChip(this,'impact')">✨ Вдохновляет</button>
+              <button class="chip" data-v="тяжело в теле" onclick="toggleChip(this,'impact')">🫀 Тяжело в теле</button>
+              <button class="chip" data-v="легко и свободно" onclick="toggleChip(this,'impact')">🕊️ Легко и свободно</button>
+            </div>
+          </div>
+          <div class="btn-group"><button class="btn btn-secondary" onclick="goStep(2)">← Назад</button><button class="btn btn-primary" onclick="goStep(4)">Далее →</button></div>
+        </div>
+        <div class="step-form card" id="sf4">
+          <div class="card-title">Завершение</div>
+          <div class="form-group">
+            <label class="form-label">Свободная запись <span>(необязательно)</span></label>
+            <textarea class="form-textarea" id="freeNote" placeholder="О чём думаете? Как себя чувствуете?" style="min-height:100px"></textarea>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Оценка дня</div>
+            <div class="intensity-row" id="dayRating">
+              <button class="intensity-btn" data-v="2" onclick="selRating(this)">😢<br>1-2</button>
+              <button class="intensity-btn" data-v="4" onclick="selRating(this)">😟<br>3-4</button>
+              <button class="intensity-btn sel" data-v="6" onclick="selRating(this)">😐<br>5-6</button>
+              <button class="intensity-btn" data-v="8" onclick="selRating(this)">😊<br>7-8</button>
+              <button class="intensity-btn" data-v="10" onclick="selRating(this)">😄<br>9-10</button>
+            </div>
+          </div>
+          <div class="btn-group"><button class="btn btn-secondary" onclick="goStep(3)">← Назад</button><button class="btn btn-primary" id="saveBtn" onclick="saveEntry()">💾 Сохранить</button></div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="page" id="page-history">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:9px">
+          <select class="form-select" id="histFilter" style="width:auto" onchange="renderHistory()">
+            <option value="all">Все записи</option>
+            <option value="positive">Позитивные</option>
+            <option value="negative">Негативные</option>
+            <option value="neutral">Нейтральные</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="exportPDF()">📄 PDF отчёт</button>
+        </div>
+        <div id="histList"></div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div class="page" id="page-analytics">
+        <div class="period-tabs">
+          <button class="period-tab active" data-ap="week">Неделя</button>
+          <button class="period-tab" data-ap="2weeks">2 недели</button>
+          <button class="period-tab" data-ap="month">Месяц</button>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">Динамика настроения</div>
+          <div class="achart" id="aChart"></div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--positive)"></div>Позитивные</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--negative)"></div>Негативные</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--neutral)"></div>Нейтральные</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:14px">
+          <div class="card"><div class="card-title">Топ позитивных</div><div id="topPosEmos"></div></div>
+          <div class="card"><div class="card-title">Негативные триггеры</div><div id="negTriggers"></div></div>
+        </div>
+        <div style="text-align:right"><button class="btn btn-outline btn-sm" onclick="exportPDF()">📄 PDF для психолога</button></div>
+      </div>
+
+      <!-- AI ASSISTANT -->
+      <div class="page" id="page-ai-assistant">
+        <div class="card" style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:13px">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:1.2rem">🤖</div>
+            <div><div style="font-weight:500;font-size:0.9rem">ИИ-помощник</div><div style="font-size:0.74rem;color:var(--text-muted)">Анализирует ваш дневник</div></div>
+            <div style="margin-left:auto"><button class="btn btn-outline btn-sm" onclick="getAIAnalysis()">🔍 Анализ</button></div>
+          </div>
+          <div class="ai-chat" id="aiChat">
+            <div class="chat-msg ai">
+              <div class="chat-av">🤖</div>
+              <div class="chat-bubble">Привет! Я ваш помощник по эмоциям. Нажмите «Анализ» для разбора дневника или задайте любой вопрос.</div>
+            </div>
+          </div>
+          <div class="ai-input-row">
+            <input class="form-input" type="text" id="aiInput" placeholder="Задайте вопрос..." onkeydown="if(event.key==='Enter')sendAI()">
+            <button class="btn btn-primary" onclick="sendAI()">→</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚙️ API ключ</div>
+          <div class="form-group">
+            <label class="form-label">Anthropic API Key</label>
+            <input class="form-input" type="password" id="apiKeyInput" placeholder="sk-ant-...">
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Ключ хранится только в вашем браузере</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="saveApiKey()">Сохранить</button>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page" id="page-settings">
+        <div class="card" style="margin-bottom:14px">
+          <div class="settings-title">Профили</div>
+          <div id="profilesSettingsList"></div>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="settings-title">База данных (Supabase)</div>
+          <div class="info-box" id="supabaseStatus">⏳ Проверка подключения...</div>
+        </div>
+        <div class="card">
+          <div class="settings-title">Данные</div>
+          <div class="settings-row">
+            <div><div class="settings-row-lbl">Принудительная синхронизация</div><div class="settings-row-desc">Загрузить все данные из Google Sheets</div></div>
+            <button class="btn btn-secondary btn-sm" onclick="syncNow()">↻ Синхронизировать</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-lbl">Отправить несохранённые записи</div>
+              <div class="settings-row-desc" id="pendingCountDesc">Записей ожидает отправки: 0</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="flushPending()">⬆️ Отправить</button>
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-row-lbl">Экспорт в JSON</div><div class="settings-row-desc">Скачать мои записи</div></div>
+            <button class="btn btn-secondary btn-sm" onclick="exportData()">⬇️ Скачать</button>
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-row-lbl">Очистить кэш</div><div class="settings-row-desc">Удалить локальный кэш (данные в Sheets останутся)</div></div>
+            <button class="btn btn-danger btn-sm" onclick="clearCache()">🗑️ Очистить</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Edit profile modal -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <div class="modal-title">Редактировать профиль</div>
+    <div class="form-group">
+      <label class="form-label">Имя</label>
+      <input class="form-input" id="ep_name" maxlength="20">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Аватар</label>
+      <div class="avatar-grid" id="ep_avatarGrid"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Новый PIN <span>(оставьте пустым чтобы не менять)</span></label>
+      <input class="form-input" id="ep_pin" type="password" maxlength="4" placeholder="4 цифры" inputmode="numeric">
+    </div>
+    <input type="hidden" id="ep_id">
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="closeModal('editModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveProfileEdit()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<button class="fab" onclick="navigate('new-entry')" title="Новая запись">✍️</button>
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+const AVATARS = ['🌸','🌙','⭐','🦋','🌊','🔥','🌿','☀️','🦄','🎨','🎵','🌈','🍀','🦊','🐬','🌺'];
+
+const EMOTIONS = {
+  positive: [
+    {id:'joy',e:'😄',l:'Радость'},{id:'gratitude',e:'🙏',l:'Благодарность'},
+    {id:'love',e:'❤️',l:'Любовь'},{id:'excitement',e:'🤩',l:'Восторг'},
+    {id:'hope',e:'🌟',l:'Надежда'},{id:'pride',e:'💪',l:'Гордость'},
+    {id:'calm',e:'😌',l:'Спокойствие'},{id:'inspiration',e:'✨',l:'Вдохновение'},
+    {id:'tenderness',e:'🥰',l:'Нежность'},{id:'satisfaction',e:'😊',l:'Удовлетворение'},
+    {id:'enthusiasm',e:'🚀',l:'Энтузиазм'},{id:'relief',e:'😮‍💨',l:'Облегчение'},
+    {id:'curiosity',e:'🔍',l:'Любопытство'},{id:'confidence',e:'😎',l:'Уверенность'},
+    {id:'anticipation',e:'🎉',l:'Предвкушение'},
+  ],
+  negative: [
+    {id:'anger',e:'😠',l:'Злость'},{id:'sadness',e:'😢',l:'Грусть'},
+    {id:'anxiety',e:'😰',l:'Тревога'},{id:'fear',e:'😨',l:'Страх'},
+    {id:'frustration',e:'😤',l:'Раздражение'},{id:'guilt',e:'😞',l:'Вина'},
+    {id:'shame',e:'🫣',l:'Стыд'},{id:'loneliness',e:'🥺',l:'Одиночество'},
+    {id:'envy',e:'💚',l:'Зависть'},{id:'despair',e:'😩',l:'Отчаяние'},
+    {id:'disappoint',e:'😔',l:'Разочарование'},{id:'boredom',e:'😑',l:'Скука'},
+    {id:'helpless',e:'🤷',l:'Беспомощность'},{id:'resentment',e:'😒',l:'Обида'},
+    {id:'disgust',e:'🤢',l:'Отвращение'},
+  ],
+  neutral: [
+    {id:'surprise',e:'😮',l:'Удивление'},{id:'thoughtful',e:'🤨',l:'Задумчивость'},
+    {id:'nostalgia',e:'🌙',l:'Ностальгия'},{id:'indiff',e:'😶',l:'Безразличие'},
+    {id:'confusion',e:'😵',l:'Смятение'},{id:'ambiv',e:'🤷‍♀️',l:'Двойственность'},
+    {id:'waiting',e:'⏳',l:'Ожидание'},{id:'accept',e:'🕊️',l:'Принятие'},
+  ]
+};
+
+const CAUSES = [
+  {v:'работа',l:'💼 Работа'},{v:'отношения',l:'💑 Отношения'},
+  {v:'семья',l:'👨‍👩‍👧 Семья'},{v:'здоровье',l:'🏥 Здоровье'},
+  {v:'финансы',l:'💰 Финансы'},{v:'самооценка',l:'🪞 Самооценка'},
+  {v:'общение',l:'🗣️ Общение'},{v:'планы/цели',l:'🎯 Планы'},
+  {v:'отдых',l:'🌴 Отдых'},{v:'творчество',l:'🎨 Творчество'},
+  {v:'хобби',l:'⚽ Хобби'},{v:'погода',l:'🌦️ Погода'},
+  {v:'новости',l:'📰 Новости'},{v:'учёба',l:'📚 Учёба'},
+  {v:'другое',l:'🌀 Другое'},
+];
+
+const DEFAULT_PROFILES = [
+  {id:'nika',name:'Ника',avatar:'🌸',pin:null},
+  {id:'user1',name:'Пользователь 1',avatar:'🌙',pin:null},
+  {id:'user2',name:'Пользователь 2',avatar:'⭐',pin:null},
+  {id:'user3',name:'Пользователь 3',avatar:'🦋',pin:null},
+];
+
+// ============================================================
+// UPDATED GAS CODE — Sheets-first, with duplicate check
+// ============================================================
+const GAS_CODE = `function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('Entries') || ss.getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+
+    var HEADERS = ['ID','Дата','Пользователь','Эмоции','Категория',
+      'Причины','Описание','Влияние','Интенсивность','Оценка','Заметка'];
+
+    // Ensure header row
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(HEADERS);
+    } else {
+      var firstRow = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0];
+      if (firstRow[0] !== 'ID') sheet.insertRowBefore(1).getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    }
+
+    // GET entries for a user
+    if (data.action === 'getEntries') {
+      var rows = sheet.getDataRange().getValues();
+      var headers = rows[0];
+      var result = [];
+      for (var i = 1; i < rows.length; i++) {
+        var row = {};
+        headers.forEach(function(h, j) { row[h] = rows[i][j]; });
+        if (String(row['Пользователь']) === String(data.user)) result.push(row);
+      }
+      return json({status:'ok', entries: result, count: result.length});
+    }
+
+    // ADD entry (with duplicate check by ID)
+    if (data.action === 'addEntry') {
+      // Check for duplicate
+      var existing = sheet.getDataRange().getValues();
+      for (var r = 1; r < existing.length; r++) {
+        if (String(existing[r][0]) === String(data.id)) {
+          return json({status:'ok', duplicate: true});
+        }
+      }
+      sheet.appendRow([
+        data.id, data.timestamp, data.user,
+        data.emotions, data.category, data.causes,
+        data.causeDesc, data.impacts, data.intensity,
+        data.dayRating, data.freeNote
+      ]);
+      return json({status:'ok', duplicate: false});
+    }
+
+    // BATCH add entries (for syncing pending queue)
+    if (data.action === 'addBatch') {
+      var existing2 = sheet.getDataRange().getValues();
+      var existingIds = new Set(existing2.slice(1).map(function(r){ return String(r[0]); }));
+      var added = 0;
+      (data.entries || []).forEach(function(entry) {
+        if (!existingIds.has(String(entry.id))) {
+          sheet.appendRow([
+            entry.id, entry.timestamp, entry.user,
+            entry.emotions, entry.category, entry.causes,
+            entry.causeDesc, entry.impacts, entry.intensity,
+            entry.dayRating, entry.freeNote
+          ]);
+          added++;
+        }
+      });
+      return json({status:'ok', added: added});
+    }
+
+    return json({status:'error', message: 'Unknown action'});
+  } catch(err) {
+    return json({status:'error', message: err.toString()});
+  }
+}
+
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) { return doPost(e); }`;
+
+// ============================================================
+// STATE
+// ============================================================
+let profiles = [];
+let currentProfileId = null;
+let entries = [];        // confirmed entries (from Sheets + cache)
+let pendingQueue = [];   // entries waiting to be sent to Sheets
+let pinBuf = '', setupPinBuf = '', confirmBuf = '';
+let setupData = {name:'', avatar:'🌸'};
+let editAvatarSel = '';
+let currentDashPeriod = 'day';
+let currentAnalyticsPeriod = 'week';
+let curEntry = {};
+let editingProfileId = null;
+let syncStatusState = 'offline'; // offline | syncing | synced | error
+
+// ============================================================
+// LOCAL STORAGE HELPERS
+// ============================================================
+function loadProfiles() {
+  const raw = localStorage.getItem('emo3_profiles');
+  profiles = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_PROFILES));
+  if (!raw) saveProfiles();
+}
+
+function saveProfiles() {
+  localStorage.setItem('emo3_profiles', JSON.stringify(profiles));
+}
+
+function getProfile(id) { return profiles.find(p => p.id === id); }
+function getScriptUrl() { return localStorage.getItem('emo3_script_url') || ''; }
+function getApiKey() { return localStorage.getItem('emo3_api_key') || ''; }
+
+// Cache = confirmed entries from Sheets
+function getCachedEntries(profileId) {
+  const raw = localStorage.getItem('emo3_cache_' + profileId);
+  return raw ? JSON.parse(raw) : [];
+}
+function setCachedEntries(profileId, data) {
+  localStorage.setItem('emo3_cache_' + profileId, JSON.stringify(data));
+}
+
+// Pending queue = entries created offline, not yet in Sheets
+function loadPendingQueue(profileId) {
+  const raw = localStorage.getItem('emo3_pending_' + profileId);
+  return raw ? JSON.parse(raw) : [];
+}
+function savePendingQueue(profileId, queue) {
+  localStorage.setItem('emo3_pending_' + profileId, JSON.stringify(queue));
+}
+
+// All entries = confirmed + pending (pending shown with warning mark)
+function getAllEntries() {
+  const pending = pendingQueue.map(e => ({...e, _pending: true}));
+  // Merge: pending on top, avoid duplicates
+  const confirmedIds = new Set(entries.map(e => String(e.id)));
+  const newPending = pending.filter(e => !confirmedIds.has(String(e.id)));
+  return [...newPending, ...entries].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+}
+
+// ============================================================
+// SYNC STATUS UI
+// ============================================================
+function setSyncStatus(state, text) {
+  syncStatusState = state;
+  const el = document.getElementById('syncStatus');
+  const txt = document.getElementById('syncStatusText');
+  if (!el) return;
+  el.className = 'sync-status ' + state;
+  txt.textContent = text || {
+    offline: 'Офлайн',
+    syncing: 'Синхр...',
+    synced: 'Синхронизировано',
+    error: 'Ошибка связи'
+  }[state];
+}
+
+function updatePendingUI() {
+  const count = pendingQueue.length;
+  const badge = document.getElementById('pendingBadge');
+  const banner = document.getElementById('pendingBanner');
+  const bannerText = document.getElementById('pendingBannerText');
+  const countDesc = document.getElementById('pendingCountDesc');
+
+  if (badge) { badge.textContent = count > 0 ? count : ''; badge.classList.toggle('show', count > 0); }
+  if (banner) banner.classList.toggle('show', count > 0);
+  if (bannerText) bannerText.textContent = `⚠️ ${count} запис${count===1?'ь':count<5?'и':'ей'} ожидают отправки в Google Sheets`;
+  if (countDesc) countDesc.textContent = `Записей ожидает отправки: ${count}`;
+}
+
+// ============================================================
+// SUPABASE CONFIG
+// ============================================================
+const SUPABASE_URL = 'https://liyfoffelsplezaqpbcn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpeWZvZmZlbHNwbGV6YXFwYmNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzIwMDYsImV4cCI6MjA5MDIwODAwNn0.wNHEu7vrpQa2zTxku_xmXzMeOUy1fWNTHMe50DgBim4';
+const SB_HDR = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+
+async function sbSelect(table, filter) {
+  const r = await fetch(SUPABASE_URL+'/rest/v1/'+table+'?'+filter+'&order=timestamp.desc', {headers: SB_HDR});
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbInsert(table, row) {
+  const r = await fetch(SUPABASE_URL+'/rest/v1/'+table, {method:'POST', headers:{...SB_HDR,'Prefer':'return=minimal'}, body:JSON.stringify(row)});
+  if (!r.ok) throw new Error(await r.text());
+}
+async function sbInsertBatch(table, rows) {
+  if (!rows.length) return;
+  const r = await fetch(SUPABASE_URL+'/rest/v1/'+table, {method:'POST', headers:{...SB_HDR,'Prefer':'return=minimal,resolution=ignore-duplicates'}, body:JSON.stringify(rows)});
+  if (!r.ok) throw new Error(await r.text());
+}
+
+// Row <-> Entry conversion
+function entryToRow(e, pid) {
+  return { id: e.id, profile_id: pid, timestamp: e.timestamp,
+    emotions: e.emotions.map(x=>x.l).join(', '), category: e.category,
+    causes: e.causes.join(', '), cause_desc: e.causeDesc||'',
+    impacts: e.impacts.join(', '), intensity: e.intensity,
+    day_rating: e.dayRating, free_note: e.freeNote||'' };
+}
+function rowToEntry(r) {
+  return { id: r.id, timestamp: r.timestamp,
+    emotions: parseEmotionsFromString(r.emotions||''),
+    category: r.category||'neutral',
+    causes: splitCSV(r.causes), causeDesc: r.cause_desc||'',
+    impacts: splitCSV(r.impacts), intensity: r.intensity||3,
+    dayRating: r.day_rating||6, freeNote: r.free_note||'' };
+}
+function splitCSV(s) { return (s||'').split(',').map(x=>x.trim()).filter(Boolean); }
+
+// ============================================================
+// FLUSH PENDING QUEUE
+// ============================================================
+async function flushPending() {
+  if (!currentProfileId || pendingQueue.length === 0) return;
+  setSyncStatus('syncing');
+  try {
+    await sbInsertBatch('entries', pendingQueue.map(e => entryToRow(e, currentProfileId)));
+    const ids = new Set(entries.map(e => String(e.id)));
+    pendingQueue.forEach(e => { if (!ids.has(String(e.id))) entries.unshift(e); });
+    entries.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+    pendingQueue = [];
+    savePendingQueue(currentProfileId, pendingQueue);
+    setCachedEntries(currentProfileId, entries);
+    updatePendingUI();
+    setSyncStatus('synced');
+    showToast('✅ Все записи отправлены в Supabase!');
+    renderDashboard(); renderHistory();
+  } catch(e) {
+    setSyncStatus('error');
+    showToast('❌ Ошибка отправки: ' + e.message);
+  }
+}
+
+// ============================================================
+// LOCK SCREEN
+// ============================================================
+function renderProfilesGrid() {
+  const url = getScriptUrl();
+  document.getElementById('noScriptBanner').classList.toggle('show', !url);
+
+  const grid = document.getElementById('profilesGrid');
+  const colors = ['rgba(232,149,107,0.12)','rgba(123,174,232,0.12)','rgba(110,207,142,0.12)','rgba(200,150,232,0.12)'];
+  grid.innerHTML = profiles.map((p,i) => {
+    const cached = getCachedEntries(p.id).length;
+    const pending = loadPendingQueue(p.id).length;
+    const meta = [cached + ' записей', pending > 0 ? `⚠️ ${pending} не отправлено` : ''].filter(Boolean).join(' · ');
+    return `<div class="profile-card" onclick="selectProfile('${p.id}')" style="background:${colors[i]||colors[0]}">
+      <div class="pcard-lock">${p.pin?'🔒':'🔓'}</div>
+      <div class="pcard-avatar">${p.avatar}</div>
+      <div class="pcard-name">${p.name}</div>
+      <div class="pcard-meta">${meta}</div>
+    </div>`;
+  }).join('');
+}
+
+function openSettings() {
+  document.getElementById('profileSelectScreen').style.display = 'none';
+  document.getElementById('quickSettings').style.display = 'block';
+  const url = getScriptUrl();
+  if (url) document.getElementById('qs_url').value = url;
+}
+
+function saveQsUrl() {
+  const url = document.getElementById('qs_url').value.trim();
+  if (!url) { showToast('Введите URL'); return; }
+  localStorage.setItem('emo3_script_url', url);
+  document.getElementById('quickSettings').style.display = 'none';
+  document.getElementById('profileSelectScreen').style.display = 'block';
+  renderProfilesGrid();
+  showToast('✅ URL сохранён!');
+}
+
+function backToProfiles() {
+  document.getElementById('pinScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('profileSelectScreen').style.display = 'block';
+  document.getElementById('quickSettings').style.display = 'none';
+  pinBuf = ''; setupPinBuf = ''; confirmBuf = '';
+}
+
+function selectProfile(id) {
+  const p = getProfile(id);
+  if (!p) return;
+  currentProfileId = id;
+
+  if (!p.pin) {
+    document.getElementById('profileSelectScreen').style.display = 'none';
+    document.getElementById('setupScreen').style.display = 'block';
+    document.getElementById('setupTitle').textContent = `Настройка: ${p.name}`;
+    document.getElementById('setupNameInput').value = p.name;
+    setupData = {name: p.name, avatar: p.avatar, isExistingProfile: true};
+    buildAvatarGrid('avatarGrid', setupData.avatar, (a) => { setupData.avatar = a; });
+    setupNext(1);
+    return;
+  }
+
+  document.getElementById('profileSelectScreen').style.display = 'none';
+  document.getElementById('pinScreen').style.display = 'block';
+  document.getElementById('pinAv').textContent = p.avatar;
+  document.getElementById('pinName').textContent = p.name;
+  document.getElementById('pinErr').textContent = '';
+  pinBuf = '';
+  updateDots('pinDots', 0);
+}
+
+function kp(d) {
+  if (pinBuf.length >= 4) return;
+  pinBuf += d;
+  updateDots('pinDots', pinBuf.length);
+  if (pinBuf.length === 4) setTimeout(checkPin, 150);
+}
+function kd() { if (pinBuf.length > 0) { pinBuf = pinBuf.slice(0,-1); updateDots('pinDots', pinBuf.length); } }
+
+function checkPin() {
+  const p = getProfile(currentProfileId);
+  if (pinBuf === p.pin) {
+    enterApp(currentProfileId);
+  } else {
+    flashDots('pinDots');
+    document.getElementById('pinErr').textContent = 'Неверный PIN';
+    setTimeout(() => { pinBuf=''; updateDots('pinDots',0); document.getElementById('pinErr').textContent=''; }, 900);
+  }
+}
+
+function sp(d) { if (setupPinBuf.length>=4) return; setupPinBuf+=d; updateDots('setupDots',setupPinBuf.length); if (setupPinBuf.length===4) setTimeout(()=>setupNext(3),150); }
+function sd() { if (setupPinBuf.length>0){setupPinBuf=setupPinBuf.slice(0,-1);updateDots('setupDots',setupPinBuf.length);} }
+function cp(d) { if (confirmBuf.length>=4) return; confirmBuf+=d; updateDots('confirmDots',confirmBuf.length); if (confirmBuf.length===4) setTimeout(finishSetup,150); }
+function cd() { if (confirmBuf.length>0){confirmBuf=confirmBuf.slice(0,-1);updateDots('confirmDots',confirmBuf.length);} }
+
+function setupNext(n) {
+  if (n === 2) {
+    const name = document.getElementById('setupNameInput').value.trim();
+    if (!name) { showToast('Введите имя'); return; }
+    setupData.name = name;
+    document.getElementById('su_av').textContent = setupData.avatar;
+    document.getElementById('su_name').textContent = setupData.name;
+    setupPinBuf = '';
+    updateDots('setupDots', 0);
+  }
+  if (n === 3) {
+    if (setupPinBuf.length < 4) { showToast('Введите 4 цифры'); return; }
+    document.getElementById('su_av2').textContent = setupData.avatar;
+    document.getElementById('su_name2').textContent = setupData.name;
+    confirmBuf = '';
+    updateDots('confirmDots', 0);
+  }
+  document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('ss' + n).classList.add('active');
+}
+
+function finishSetup() {
+  if (confirmBuf !== setupPinBuf) {
+    flashDots('confirmDots');
+    document.getElementById('confErr').textContent = 'PIN не совпадает';
+    setTimeout(() => { confirmBuf=''; updateDots('confirmDots',0); document.getElementById('confErr').textContent=''; }, 900);
+    return;
+  }
+  const p = getProfile(currentProfileId);
+  if (p) { p.name = setupData.name; p.avatar = setupData.avatar; p.pin = setupPinBuf; }
+  saveProfiles();
+  showToast('✅ Профиль настроен!');
+  setTimeout(() => enterApp(currentProfileId), 300);
+}
+
+function updateDots(id, count) {
+  document.querySelectorAll('#'+id+' .pin-dot').forEach((d,i) => {
+    d.classList.toggle('filled', i < count);
+    d.classList.remove('error');
+  });
+}
+
+function flashDots(id) {
+  document.querySelectorAll('#'+id+' .pin-dot').forEach(d => d.classList.add('error'));
+}
+
+// ============================================================
+// ENTER APP — Sheets-first loading
+// ============================================================
+async function enterApp(profileId) {
+  currentProfileId = profileId;
+  const p = getProfile(profileId);
+
+  // Load pending queue first (offline entries)
+  pendingQueue = loadPendingQueue(profileId);
+
+  showLoading('Загрузка записей...');
+  document.getElementById('lockScreen').style.display = 'none';
+
+  // Load from cache immediately so UI is responsive
+  entries = getCachedEntries(profileId);
+
+  setSyncStatus('syncing', 'Загрузка...');
+  try {
+    const fresh = await sbSelect('entries', 'profile_id=eq.'+encodeURIComponent(profileId));
+    entries = fresh.map(rowToEntry);
+    setCachedEntries(profileId, entries);
+    setSyncStatus('synced');
+    if (pendingQueue.length > 0) {
+      showToast('📤 Отправка ' + pendingQueue.length + ' записей из очереди...');
+      setTimeout(() => flushPending(), 1500);
+    }
+  } catch(e) {
+    setSyncStatus('error');
+    showToast(entries.length > 0 ? '⚠️ Нет связи — загружены кэшированные данные' : '⚠️ Нет связи с Supabase');
+  }
+
+  hideLoading();
+  document.getElementById('mainApp').style.display = 'block';
+
+  // Setup sidebar
+  document.getElementById('su_sidebar').textContent = p.avatar;
+  document.getElementById('sun_sidebar').textContent = p.name;
+
+  // Load settings inputs
+  const surl = getScriptUrl();
+  if (surl) document.getElementById('scriptUrlInput').value = surl;
+  const key = getApiKey();
+  if (key) document.getElementById('apiKeyInput').value = key;
+  updateTopBar();
+  updatePendingUI();
+  navigate('dashboard');
+  buildEmoPicker();
+  buildCauseChips();
+  renderProfilesSettingsList();
+
+  // Auto-sync every 5 minutes if online
+  setInterval(() => { if (getScriptUrl()) syncNow(true); }, 5 * 60 * 1000);
+}
+
+function lockApp() {
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('lockScreen').style.display = 'flex';
+  currentProfileId = null;
+  entries = [];
+  pendingQueue = [];
+  pinBuf = '';
+  backToProfiles();
+  renderProfilesGrid();
+}
+
+// ============================================================
+// SYNC
+// ============================================================
+async function syncNow(silent = false) {
+  if (!currentProfileId) return;
+  const url = getScriptUrl();
+  if (!url) { if (!silent) showToast('⚠️ URL не настроен'); return; }
+
+  const btn = document.getElementById('syncBtn');
+  btn.classList.add('syncing');
+  setSyncStatus('syncing');
+  if (!silent) showLoading('Синхронизация...');
+
+  try {
+    if (pendingQueue.length > 0) await flushPending();
+    const fresh = await sbSelect('entries', 'profile_id=eq.'+encodeURIComponent(currentProfileId));
+    entries = fresh.map(rowToEntry);
+    setCachedEntries(currentProfileId, entries);
+    setSyncStatus('synced');
+    updatePendingUI();
+    renderDashboard(); renderHistory(); renderAnalytics();
+    if (!silent) showToast('✅ Данные обновлены!');
+  } catch(e) {
+    setSyncStatus('error');
+    if (!silent) showToast('❌ Ошибка синхронизации');
+  }
+
+  btn.classList.remove('syncing');
+  if (!silent) hideLoading();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const PAGE_TITLES = {
+  dashboard:'Дашборд','new-entry':'Новая запись',
+  history:'История',analytics:'Аналитика',
+  'ai-assistant':'ИИ-помощник',settings:'Настройки'
+};
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[page]||'';
+
+  if (page==='new-entry') resetNewEntry();
+  if (page==='history') renderHistory();
+  if (page==='analytics') renderAnalytics();
+  if (page==='dashboard') renderDashboard();
+  if (page==='settings') { renderProfilesSettingsList(); checkSupabaseStatus(); }
+
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOv').classList.remove('visible');
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => navigate(item.dataset.page));
+});
+document.getElementById('hamburger').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOv').classList.toggle('visible');
+});
+document.getElementById('sidebarOv').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOv').classList.remove('visible');
+});
+
+document.querySelectorAll('.period-tab[data-period]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.period-tab[data-period]').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    currentDashPeriod = tab.dataset.period;
+    renderDashboard();
+  });
+});
+
+document.querySelectorAll('.period-tab[data-ap]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.period-tab[data-ap]').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    currentAnalyticsPeriod = tab.dataset.ap;
+    renderAnalytics();
+  });
+});
+
+function updateTopBar() {
+  document.getElementById('topbarDate').textContent =
+    new Date().toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+}
+
+// ============================================================
+// NEW ENTRY
+// ============================================================
+function buildEmoPicker() {
+  const c = document.getElementById('emoPicker');
+  if (c.innerHTML) return;
+  const catL = {positive:'✦ Позитивные',negative:'✦ Негативные',neutral:'✦ Нейтральные'};
+  Object.entries(EMOTIONS).forEach(([cat,emos]) => {
+    const div = document.createElement('div');
+    div.className = 'emo-cat';
+    div.innerHTML = `<div class="emo-cat-title ${cat}">${catL[cat]}</div><div class="emos-grid" id="eg-${cat}"></div>`;
+    c.appendChild(div);
+    const grid = div.querySelector('.emos-grid');
+    emos.forEach(em => {
+      const btn = document.createElement('button');
+      btn.className = 'emo-btn';
+      btn.dataset.id = em.id; btn.dataset.cat = cat;
+      btn.innerHTML = `<span class="em">${em.e}</span><span>${em.l}</span>`;
+      btn.addEventListener('click', () => toggleEmo(btn, em, cat));
+      grid.appendChild(btn);
+    });
+  });
+}
+
+function buildCauseChips() {
+  const c = document.getElementById('causeChips');
+  if (c.innerHTML) return;
+  CAUSES.forEach(cause => {
+    const btn = document.createElement('button');
+    btn.className = 'chip'; btn.dataset.v = cause.v; btn.textContent = cause.l;
+    btn.addEventListener('click', () => toggleChip(btn,'cause'));
+    c.appendChild(btn);
+  });
+}
+
+function resetNewEntry() {
+  curEntry = {emotions:[],causes:[],causeDesc:'',impacts:[],intensity:3,freeNote:'',dayRating:6};
+  document.querySelectorAll('.emo-btn').forEach(b=>b.classList.remove('selected','positive','negative','neutral'));
+  document.querySelectorAll('#causeChips .chip').forEach(b=>b.classList.remove('sel'));
+  document.querySelectorAll('#impactChips .chip').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('causeDesc').value='';
+  document.getElementById('freeNote').value='';
+  document.querySelectorAll('#sf3 .intensity-btn').forEach((b,i)=>b.classList.toggle('sel',i===2));
+  document.querySelectorAll('#dayRating .intensity-btn').forEach((b,i)=>b.classList.toggle('sel',i===2));
+  goStep(1,true);
+}
+
+function toggleEmo(btn, em, cat) {
+  const i = curEntry.emotions.findIndex(e=>e.id===em.id);
+  if (i>=0) { curEntry.emotions.splice(i,1); btn.classList.remove('selected',cat); }
+  else { curEntry.emotions.push({...em,cat}); btn.classList.add('selected',cat); }
+}
+
+function toggleChip(btn, type) {
+  btn.classList.toggle('sel');
+  const v = btn.dataset.v;
+  if (type==='cause') {
+    const i=curEntry.causes.indexOf(v);
+    if(i>=0)curEntry.causes.splice(i,1);else curEntry.causes.push(v);
+  } else {
+    const i=curEntry.impacts.indexOf(v);
+    if(i>=0)curEntry.impacts.splice(i,1);else curEntry.impacts.push(v);
+  }
+}
+
+function selInt(btn) {
+  document.querySelectorAll('#sf3 .intensity-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel'); curEntry.intensity=parseInt(btn.dataset.v);
+}
+function selRating(btn) {
+  document.querySelectorAll('#dayRating .intensity-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel'); curEntry.dayRating=parseInt(btn.dataset.v);
+}
+
+function goStep(n, silent) {
+  if (!silent) {
+    if (n===2 && curEntry.emotions.length===0) { showToast('Выберите хотя бы одну эмоцию'); return; }
+    if (n>2) curEntry.causeDesc = document.getElementById('causeDesc').value;
+  }
+  document.querySelectorAll('.step-form').forEach(f=>f.classList.remove('active'));
+  document.getElementById('sf'+n).classList.add('active');
+  document.getElementById('progFill').style.width = {1:25,2:50,3:75,4:100}[n]+'%';
+  [1,2,3,4].forEach(i => {
+    const el = document.getElementById('sl'+i);
+    el.className = 'step-lbl'+(i<n?' done':i===n?' active':'');
+  });
+}
+
+// ============================================================
+// SAVE ENTRY — Sheets-first strategy
+// ============================================================
+async function saveEntry() {
+  curEntry.freeNote = document.getElementById('freeNote').value;
+  curEntry.causeDesc = document.getElementById('causeDesc').value;
+  if (curEntry.emotions.length===0) { showToast('Выберите эмоцию'); return; }
+
+  const counts={positive:0,negative:0,neutral:0};
+  curEntry.emotions.forEach(e=>counts[e.cat]++);
+  const cat = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0];
+
+  const entry = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    emotions: [...curEntry.emotions],
+    category: cat,
+    causes: [...curEntry.causes],
+    causeDesc: curEntry.causeDesc,
+    impacts: [...curEntry.impacts],
+    intensity: curEntry.intensity,
+    freeNote: curEntry.freeNote,
+    dayRating: curEntry.dayRating
+  };
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = '⏳ Сохранение...';
+
+  setSyncStatus('syncing', 'Сохранение...');
+  try {
+    await sbInsert('entries', entryToRow(entry, currentProfileId));
+    entries.unshift(entry);
+    setCachedEntries(currentProfileId, entries);
+    setSyncStatus('synced');
+    showToast('✅ Сохранено в Supabase!');
+  } catch(e) {
+    pendingQueue.unshift(entry);
+    savePendingQueue(currentProfileId, pendingQueue);
+    setSyncStatus('error', 'Нет связи');
+    updatePendingUI();
+    showToast('📥 Нет связи — сохранено локально, отправится автоматически');
+  }
+
+  btn.disabled = false; btn.textContent = '💾 Сохранить';
+  setTimeout(() => navigate('dashboard'), 700);
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function getFiltered(period) {
+  const now=new Date(), cut=new Date();
+  if(period==='day')cut.setHours(0,0,0,0);
+  else if(period==='week')cut.setDate(now.getDate()-7);
+  else if(period==='2weeks')cut.setDate(now.getDate()-14);
+  else if(period==='month')cut.setDate(now.getDate()-30);
+  return getAllEntries().filter(e=>new Date(e.timestamp)>=cut);
+}
+
+function renderDashboard() {
+  const f=getFiltered(currentDashPeriod);
+  const pos=f.filter(e=>e.category==='positive').length;
+  const neg=f.filter(e=>e.category==='negative').length;
+  const neu=f.filter(e=>e.category==='neutral').length;
+  const tot=f.length;
+
+  ['st0','st1','st2','st3'].forEach((id,i)=>document.getElementById(id).textContent=[tot,pos,neg,neu][i]);
+
+  const h=new Date().getHours();
+  const p=getProfile(currentProfileId);
+  const gr=h<6?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';
+  document.getElementById('greeting').textContent=gr+', '+p.name+'! 🌸';
+  const tc=getFiltered('day').length;
+  document.getElementById('greetingSub').textContent=tc===0?'Как вы себя чувствуете сегодня?':`Сегодня уже ${tc} запис${tc===1?'ь':tc<5?'и':'ей'}`;
+
+  const circ=document.getElementById('moodCirc');
+  const lbl=document.getElementById('moodLbl');
+  const sub=document.getElementById('moodSub');
+  if(tot===0){circ.className='mood-circle empty';document.getElementById('moodEmo').textContent='❓';lbl.textContent='Нет данных';sub.textContent='Добавьте первую запись';}
+  else{
+    const dom=pos>=neg&&pos>=neu?'positive':neg>=neu?'negative':'neutral';
+    circ.className='mood-circle '+dom;
+    document.getElementById('moodEmo').textContent={positive:'😊',negative:'😔',neutral:'😐'}[dom];
+    lbl.textContent={positive:'Позитивное',negative:'Негативное',neutral:'Нейтральное'}[dom]+' настроение';
+    sub.textContent=`${Math.round(pos/tot*100)}% позитива · ${Math.round(neg/tot*100)}% негатива`;
+  }
+
+  // Mini bar chart (all entries, last 7 days)
+  const allE = getAllEntries();
+  const chart=document.getElementById('miniChart');
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
+    const nx=new Date(d);nx.setDate(nx.getDate()+1);
+    const de=allE.filter(e=>{const t=new Date(e.timestamp);return t>=d&&t<nx;});
+    days.push({lbl:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d.getDay()],entries:de});
+  }
+  const maxC=Math.max(...days.map(d=>d.entries.length),1);
+  chart.innerHTML=days.map(day=>{
+    const p=day.entries.filter(e=>e.category==='positive').length;
+    const n=day.entries.filter(e=>e.category==='negative').length;
+    const u=day.entries.filter(e=>e.category==='neutral').length;
+    const t=p+n+u;const sc=t>0?56*t/maxC:0;
+    return `<div class="bar-group"><div class="bar-bars">
+      ${p>0?`<div class="bar p" style="height:${Math.max(3,sc*p/t)}px"></div>`:''}
+      ${n>0?`<div class="bar n" style="height:${Math.max(3,sc*n/t)}px"></div>`:''}
+      ${u>0?`<div class="bar u" style="height:${Math.max(3,sc*u/t)}px"></div>`:''}
+      ${t===0?'<div class="bar u" style="height:3px;opacity:0.15"></div>':''}
+    </div><div class="bar-lbl">${day.lbl}</div></div>`;
+  }).join('');
+
+  // Top emotions
+  const ec={};
+  f.forEach(e=>e.emotions.forEach(em=>{if(!ec[em.id])ec[em.id]={...em,count:0};ec[em.id].count++;}));
+  const top=Object.values(ec).sort((a,b)=>b.count-a.count).slice(0,10);
+  document.getElementById('topEmos').innerHTML=top.length
+    ?top.map(e=>`<span class="emo-tag ${e.cat}">${e.e} ${e.l}<span class="cnt">${e.count}</span></span>`).join('')
+    :'<div class="empty-state"><div class="big">🌱</div><p>Нет данных за этот период</p></div>';
+
+  // Recent
+  const recent=getAllEntries().slice(0,5);
+  document.getElementById('recentList').innerHTML=recent.length
+    ?recent.map(entryHtml).join('')
+    :'<div class="empty-state"><div class="big">📝</div><p>Нет записей. Нажмите ✍️!</p></div>';
+
+  updatePendingUI();
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+function entryHtml(e) {
+  const time=new Date(e.timestamp).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  const main=e.emotions[0]||{e:'❓',l:'',cat:'neutral'};
+  const more=e.emotions.length>1?` +${e.emotions.length-1}`:'';
+  const catL={positive:'Позитивная',negative:'Негативная',neutral:'Нейтральная'};
+  const pendingMark=e._pending?`<span class="entry-pending-badge">⏳ не отправлено</span>`:'';
+  return `<div class="entry-card${e._pending?' pending':''}">
+    <div class="entry-time">${time}</div>
+    <div class="entry-icon">${main.e}</div>
+    <div class="entry-body">
+      <div class="entry-ename">${main.l}${more}${pendingMark}</div>
+      ${e.causes.length?`<div class="entry-cause">📍 ${e.causes.join(', ')}</div>`:''}
+      ${e.freeNote?`<div class="entry-note">${e.freeNote.slice(0,88)}${e.freeNote.length>88?'...':''}</div>`:''}
+      <span class="entry-badge ${e.category}">${catL[e.category]}</span>
+    </div>
+  </div>`;
+}
+
+function renderHistory() {
+  const filter=document.getElementById('histFilter').value;
+  const all=getAllEntries();
+  const filtered=filter==='all'?all:all.filter(e=>e.category===filter);
+  if(!filtered.length){document.getElementById('histList').innerHTML='<div class="empty-state"><div class="big">📖</div><p>Нет записей</p></div>';return;}
+  const groups={};
+  filtered.forEach(e=>{
+    const d=new Date(e.timestamp).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
+    if(!groups[d])groups[d]=[];groups[d].push(e);
+  });
+  document.getElementById('histList').innerHTML=Object.entries(groups)
+    .map(([date,es])=>`<div class="date-header">📅 ${date}</div>${es.map(entryHtml).join('')}`).join('');
+}
+
+// ============================================================
+// ANALYTICS
+// ============================================================
+function renderAnalytics() {
+  const days=currentAnalyticsPeriod==='week'?7:currentAnalyticsPeriod==='2weeks'?14:30;
+  const step=days<=14?1:3;
+  const allE=getAllEntries();
+  const cols=[];
+  for(let i=days-1;i>=0;i-=step){
+    const d=new Date();d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
+    const end=new Date(d);end.setDate(end.getDate()+step);
+    const ce=allE.filter(e=>{const t=new Date(e.timestamp);return t>=d&&t<end;});
+    cols.push({
+      lbl:days<=7?['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d.getDay()]:`${d.getDate()}.${String(d.getMonth()+1).padStart(2,'0')}`,
+      pos:ce.filter(e=>e.category==='positive').length,
+      neg:ce.filter(e=>e.category==='negative').length,
+      neu:ce.filter(e=>e.category==='neutral').length,
+    });
+  }
+  const maxV=Math.max(...cols.map(c=>c.pos+c.neg+c.neu),1);
+  document.getElementById('aChart').innerHTML=cols.map(col=>{
+    const t=col.pos+col.neg+col.neu;const sc=t>0?106*t/maxV:0;
+    return `<div class="acol"><div class="astack">
+      ${col.neg>0?`<div class="aseg n" style="height:${Math.max(2,sc*col.neg/t)}px"></div>`:''}
+      ${col.neu>0?`<div class="aseg u" style="height:${Math.max(2,sc*col.neu/t)}px"></div>`:''}
+      ${col.pos>0?`<div class="aseg p" style="height:${Math.max(2,sc*col.pos/t)}px"></div>`:''}
+      ${t===0?'<div style="height:3px;background:var(--border);border-radius:2px"></div>':''}
+    </div><div class="acol-lbl">${col.lbl}</div></div>`;
+  }).join('');
+
+  const cut=new Date();cut.setDate(cut.getDate()-days);
+  const pe=allE.filter(e=>new Date(e.timestamp)>=cut);
+  const posC={},negC={};
+  pe.forEach(e=>{
+    e.emotions.filter(em=>em.cat==='positive').forEach(em=>{posC[em.l]=(posC[em.l]||0)+1;});
+    if(e.category==='negative')e.causes.forEach(c=>{negC[c]=(negC[c]||0)+1;});
+  });
+  const pi=Object.entries(posC).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const ni=Object.entries(negC).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('topPosEmos').innerHTML=pi.length?pi.map(([l,c])=>`<div class="rank-item"><span>${l}</span><span class="rank-val p">${c}</span></div>`).join(''):'<div style="font-size:0.8rem;color:var(--text-muted);padding:10px 0">Нет данных</div>';
+  document.getElementById('negTriggers').innerHTML=ni.length?ni.map(([l,c])=>`<div class="rank-item"><span>${l}</span><span class="rank-val n">${c}</span></div>`).join(''):'<div style="font-size:0.8rem;color:var(--text-muted);padding:10px 0">Нет данных</div>';
+}
+
+// ============================================================
+// AI ASSISTANT
+// ============================================================
+async function sendAI() {
+  const inp=document.getElementById('aiInput');
+  const msg=inp.value.trim(); if(!msg)return;
+  inp.value=''; addMsg(msg,'user'); await callClaude(msg);
+}
+
+async function getAIAnalysis() {
+  const slice=getAllEntries().slice(0,20);
+  if(!slice.length){addMsg('Нет записей для анализа. Добавьте несколько записей!','ai');return;}
+  const p=getProfile(currentProfileId);
+  const summary=slice.map(e=>{
+    const d=new Date(e.timestamp).toLocaleDateString('ru-RU');
+    return `${d}: ${e.emotions.map(em=>em.l).join(', ')} (${e.category}), причины: ${e.causes.join(', ')||'не указаны'}, интенсивность: ${e.intensity}/4, оценка: ${e.dayRating}/10${e.freeNote?', заметка: "'+e.freeNote+'"':''}`;
+  }).join('\n');
+  await callClaude(`Это записи эмоционального дневника ${p?.name||''}:\n\n${summary}\n\nПроанализируй состояние: паттерны, что радует, что беспокоит. Дай конкретные рекомендации. По-русски, тепло.`,true);
+}
+
+async function callClaude(msg) {
+  const key=getApiKey();
+  if(!key){addMsg('Добавьте API ключ в разделе ИИ-помощник ниже.','ai');return;}
+  const tid='t'+Date.now();
+  const chat=document.getElementById('aiChat');
+  chat.innerHTML+=`<div class="chat-msg ai" id="${tid}"><div class="chat-av">🤖</div><div class="chat-bubble"><div class="typing-ind"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div></div>`;
+  chat.scrollTop=chat.scrollHeight;
+  try{
+    const r=await fetch('https://cookbook-proxy.nataliya-krivosheya-diskurs.workers.dev/',{
+      method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:'Ты тёплый психологический помощник. Анализируешь эмоциональный дневник и даёшь практичные рекомендации. По-русски, поддерживающе.',
+        messages:[{role:'user',content:msg}]})
+    });
+    document.getElementById(tid)?.remove();
+    if(!r.ok)throw new Error(r.status);
+    const d=await r.json();
+    addMsg(d.content?.[0]?.text||'Нет ответа','ai');
+  }catch(e){document.getElementById(tid)?.remove();addMsg('Ошибка соединения. Проверьте API ключ.','ai');}
+}
+
+function addMsg(text,role){
+  const chat=document.getElementById('aiChat');
+  chat.innerHTML+=`<div class="chat-msg ${role}"><div class="chat-av">${{ai:'🤖',user:'😊'}[role]}</div><div class="chat-bubble">${text.replace(/\n/g,'<br>')}</div></div>`;
+  chat.scrollTop=chat.scrollHeight;
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function buildAvatarGrid(containerId, selected, onSelect) {
+  const c=document.getElementById(containerId);
+  c.innerHTML=AVATARS.map(a=>`<button onclick="(${onSelect.toString()})('${a}');this.closest('.avatar-grid').querySelectorAll('.avatar-btn').forEach(b=>b.classList.remove('sel'));this.classList.add('sel')" class="avatar-btn ${a===selected?'sel':''}">${a}</button>`).join('');
+}
+
+function renderProfilesSettingsList() {
+  document.getElementById('profilesSettingsList').innerHTML=profiles.map(p=>{
+    const count=getCachedEntries(p.id).length;
+    const pending=loadPendingQueue(p.id).length;
+    const isCur=p.id===currentProfileId;
+    return `<div class="psc">
+      <div class="psc-av">${p.avatar}</div>
+      <div class="psc-info">
+        <div class="psc-name">${p.name} ${isCur?'<span style="font-size:0.68rem;color:var(--accent)">• текущий</span>':''}</div>
+        <div class="psc-meta">${count} записей · PIN: ${p.pin?'установлен':'не установлен'}${pending>0?` · ⚠️ ${pending} не отправлено`:''}</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="openEditModal('${p.id}')">✏️</button>
+    </div>`;
+  }).join('');
+
+  // Update pending count in settings
+  const countDesc = document.getElementById('pendingCountDesc');
+  if (countDesc) countDesc.textContent = `Записей ожидает отправки: ${pendingQueue.length}`;
+}
+
+function openEditModal(profileId) {
+  const p=getProfile(profileId);
+  if(!p)return;
+  editingProfileId=profileId;
+  editAvatarSel=p.avatar;
+  document.getElementById('ep_name').value=p.name;
+  document.getElementById('ep_pin').value='';
+  document.getElementById('ep_id').value=profileId;
+  buildAvatarGrid('ep_avatarGrid',p.avatar,(a)=>{editAvatarSel=a;});
+  document.getElementById('editModal').classList.add('open');
+}
+
+function saveProfileEdit() {
+  const id=document.getElementById('ep_id').value;
+  const name=document.getElementById('ep_name').value.trim();
+  const pin=document.getElementById('ep_pin').value.trim();
+  if(!name){showToast('Введите имя');return;}
+  if(pin&&(pin.length!==4||!/^\d{4}$/.test(pin))){showToast('PIN — 4 цифры');return;}
+  const p=getProfile(id);
+  if(p){
+    p.name=name;p.avatar=editAvatarSel;
+    if(pin)p.pin=pin;
+    saveProfiles();
+    if(id===currentProfileId){document.getElementById('su_sidebar').textContent=p.avatar;document.getElementById('sun_sidebar').textContent=p.name;}
+    renderProfilesSettingsList();renderProfilesGrid();showToast('✅ Профиль обновлён!');
+  }
+  closeModal('editModal');
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function saveScriptUrl(){
+  const url=document.getElementById('scriptUrlInput').value.trim();
+  localStorage.setItem('emo3_script_url',url);
+  showToast('✅ URL сохранён!');
+}
+
+function saveApiKey(){
+  const key=document.getElementById('apiKeyInput').value.trim();
+  localStorage.setItem('emo3_api_key',key);
+  showToast('✅ Ключ сохранён!');
+}
+
+function copyGas(){navigator.clipboard.writeText(GAS_CODE).then(()=>showToast('📋 Код скопирован!'));}
+
+function exportData(){
+  const all=getAllEntries();
+  const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='diary-'+currentProfileId+'-'+new Date().toISOString().split('T')[0]+'.json';
+  a.click();
+}
+
+function clearCache(){
+  if(confirm('Удалить локальный кэш? Данные в Google Sheets останутся.')){
+    localStorage.removeItem('emo3_cache_'+currentProfileId);
+    entries=[];renderDashboard();showToast('Кэш очищен');
+  }
+}
+
+// ============================================================
+// PDF EXPORT
+// ============================================================
+function exportPDF(){
+  const p=getProfile(currentProfileId);
+  const catL={positive:'Позитивная',negative:'Негативная',neutral:'Нейтральная'};
+  const all=getAllEntries();
+  const pos=all.filter(e=>e.category==='positive').length;
+  const neg=all.filter(e=>e.category==='negative').length;
+  const neu=all.filter(e=>e.category==='neutral').length;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>body{font-family:Georgia,serif;max-width:800px;margin:0 auto;padding:40px;color:#1a1828}h1{color:#c17b4e;border-bottom:2px solid #c17b4e;padding-bottom:10px}.stats{display:flex;gap:16px;margin:20px 0}.stat{padding:14px;border-radius:8px;text-align:center;flex:1}.stat.t{background:#f5f0eb}.stat.p{background:#d4edd9}.stat.n{background:#f5d8d6}.stat.u{background:#d6e4f5}.sn{font-size:1.8rem;font-weight:bold}.entry{margin:10px 0;padding:14px;border:1px solid #e8ddd4;border-radius:8px;page-break-inside:avoid}.eh{font-weight:bold;margin-bottom:5px}.em{font-size:0.82rem;color:#8a7a72;margin:3px 0}.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:0.76rem;font-weight:bold}.badge.positive{background:#d4edd9;color:#5a9e6f}.badge.negative{background:#f5d8d6;color:#c0504a}.badge.neutral{background:#d6e4f5;color:#6b8cba}</style>
+</head><body>
+<h1>📊 Отчёт: ${p?.avatar||''} ${p?.name||''}</h1>
+<p>Сформирован: ${new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'})}</p>
+<div class="stats"><div class="stat t"><div class="sn">${all.length}</div><div>Всего</div></div><div class="stat p"><div class="sn">${pos}</div><div>Позитивных</div></div><div class="stat n"><div class="sn">${neg}</div><div>Негативных</div></div><div class="stat u"><div class="sn">${neu}</div><div>Нейтральных</div></div></div>
+${all.slice(0,60).map(e=>{
+  const d=new Date(e.timestamp);
+  return `<div class="entry"><div class="eh">${e.emotions.map(em=>em.e+' '+em.l).join(', ')} <span class="badge ${e.category}">${catL[e.category]}</span></div><div class="em">📅 ${d.toLocaleString('ru-RU')} · Интенсивность: ${e.intensity}/4 · Оценка: ${e.dayRating}/10</div>${e.causes.length?`<div class="em">📍 ${e.causes.join(', ')}</div>`:''} ${e.causeDesc?`<div class="em">💬 ${e.causeDesc}</div>`:''} ${e.freeNote?`<div style="margin-top:5px;font-style:italic;font-size:0.88rem">${e.freeNote}</div>`:''}</div>`;
+}).join('')}
+<script>window.print();<\/script></body></html>`;
+  const win=window.open('','_blank');win.document.write(html);win.document.close();
+}
+
+// ============================================================
+// LOADING + TOAST
+// ============================================================
+function showLoading(text){
+  document.getElementById('loadingText').textContent=text||'Загрузка...';
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading(){document.getElementById('loadingOverlay').classList.remove('show');}
+
+let toastT;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ============================================================
+// PWA — Service Worker
+// ============================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+// ============================================================
+// PWA — Back button handling
+// ============================================================
+const _origNavigate = navigate;
+function navigateWithHistory(page) {
+  if (document.getElementById('mainApp').style.display !== 'none') {
+    if (page !== 'dashboard') {
+      history.pushState({page}, '', '#' + page);
+    } else {
+      history.replaceState({page:'dashboard'}, '', '#dashboard');
+    }
+  }
+  _origNavigate(page);
+}
+
+window.addEventListener('popstate', (e) => {
+  if (document.getElementById('mainApp').style.display !== 'none') {
+    const page = e.state?.page || 'dashboard';
+    _origNavigate(page);
+  }
+});
+
+// Override nav items to use history
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.onclick = () => navigateWithHistory(item.dataset.page);
+});
+document.querySelector('.fab').onclick = () => navigateWithHistory('new-entry');
+
+// ============================================================
+// SUPABASE STATUS CHECK
+// ============================================================
+async function checkSupabaseStatus() {
+  const el = document.getElementById('supabaseStatus');
+  if (!el) return;
+  try {
+    await sbSelect('entries', 'limit=1');
+    el.innerHTML = '✅ <strong>Supabase подключён</strong> — данные хранятся в облаке и не зависят от браузера. Работает на телефоне, компьютере, планшете — везде.';
+    el.style.borderColor = 'var(--positive)';
+  } catch(e) {
+    el.innerHTML = '❌ Нет подключения к Supabase. Проверьте интернет.';
+    el.style.borderColor = 'var(--negative)';
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadProfiles();
+renderProfilesGrid();
+</script>
+</body>
+</html>
