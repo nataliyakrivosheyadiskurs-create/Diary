@@ -495,7 +495,7 @@ body::before {
     <div id="profileSelectScreen">
 <div class="profiles-grid" id="profilesGrid"></div>
       <div style="text-align:center;margin-top:14px">
-        <button class="btn btn-secondary btn-sm" onclick="showApp();navigate('settings')">⚙️ Настройки</button>
+        <button class="btn btn-secondary btn-sm" onclick="navigate('settings');showApp()">⚙️ Настройки</button>
       </div>
     </div>
 
@@ -1312,6 +1312,11 @@ function flashDots(id) {
 // ============================================================
 // ENTER APP — Sheets-first loading
 // ============================================================
+function showApp() {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display    = 'block';
+}
+
 async function enterApp(profileId) {
   currentProfileId = profileId;
   const p = getProfile(profileId);
