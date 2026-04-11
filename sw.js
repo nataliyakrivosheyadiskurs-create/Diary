@@ -1,4 +1,4 @@
-const CACHE_NAME = 'emodiary-v1';
+const CACHE_NAME = 'emodiary-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -22,12 +22,15 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Don't cache API calls
-  if (event.request.url.includes('googleapis.com/spreadsheets') ||
-      event.request.url.includes('script.google.com') ||
-      event.request.url.includes('workers.dev') ||
-      event.request.url.includes('anthropic.com')) {
-    return;
+  const url = event.request.url;
+
+  // Never intercept API calls — let them go directly to the network
+  if (url.includes('supabase.co') ||
+      url.includes('workers.dev') ||
+      url.includes('anthropic.com') ||
+      url.includes('googleapis.com/spreadsheets') ||
+      url.includes('script.google.com')) {
+    return; // skip — browser handles these directly
   }
 
   event.respondWith(
