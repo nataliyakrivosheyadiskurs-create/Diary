@@ -1749,7 +1749,7 @@ async function callClaude(msg) {
   try{
     const r=await fetch('https://cookbook-proxy.nataliya-krivosheya-diskurs.workers.dev/',{
       method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,
         system:'Ты тёплый психологический помощник. Анализируешь эмоциональный дневник и даёшь практичные рекомендации. По-русски, поддерживающе.',
         messages:[{role:'user',content:msg}]})
     });
