@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Эмодневник</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f0e17">
 <meta name="mobile-web-app-capable" content="yes">
@@ -477,10 +475,9 @@ body::before {
 </head>
 <body>
 
-<!-- LOADING OVERLAY -->
 <div id="loadingOverlay">
   <div class="spinner"></div>
-  <div class="loading-text" id="loadingText">Загрузка данных...</div>
+  <div class="loading-text" id="loadingText">Загрузка...</div>
 </div>
 
 <!-- LOCK SCREEN -->
@@ -491,44 +488,30 @@ body::before {
       <p>Личный дневник эмоций</p>
     </div>
 
-    <!-- Profile select -->
     <div id="profileSelectScreen">
-<div class="profiles-grid" id="profilesGrid"></div>
-      <div style="text-align:center;margin-top:14px">
-        <button class="btn btn-secondary btn-sm" onclick="navigate('settings');showApp()">⚙️ Настройки</button>
-      </div>
+      <div class="profiles-grid" id="profilesGrid"></div>
     </div>
 
-    <!-- PIN screen -->
     <div id="pinScreen">
       <div class="pin-back" onclick="backToProfiles()">← Назад</div>
       <div class="pin-profile">
         <div class="pin-avatar" id="pinAv"></div>
         <div class="pin-name" id="pinName"></div>
-        <div class="pin-hint" id="pinHint">Введите PIN-код</div>
+        <div class="pin-hint">Введите PIN-код</div>
       </div>
       <div class="pin-dots" id="pinDots">
         <div class="pin-dot"></div><div class="pin-dot"></div>
         <div class="pin-dot"></div><div class="pin-dot"></div>
       </div>
       <div class="pin-keypad">
-        <button class="pin-key" onclick="kp('1')">1</button>
-        <button class="pin-key" onclick="kp('2')">2</button>
-        <button class="pin-key" onclick="kp('3')">3</button>
-        <button class="pin-key" onclick="kp('4')">4</button>
-        <button class="pin-key" onclick="kp('5')">5</button>
-        <button class="pin-key" onclick="kp('6')">6</button>
-        <button class="pin-key" onclick="kp('7')">7</button>
-        <button class="pin-key" onclick="kp('8')">8</button>
-        <button class="pin-key" onclick="kp('9')">9</button>
-        <button class="pin-key ghost"></button>
-        <button class="pin-key" onclick="kp('0')">0</button>
-        <button class="pin-key del" onclick="kd()">⌫</button>
+        <button class="pin-key" onclick="kp('1')">1</button><button class="pin-key" onclick="kp('2')">2</button><button class="pin-key" onclick="kp('3')">3</button>
+        <button class="pin-key" onclick="kp('4')">4</button><button class="pin-key" onclick="kp('5')">5</button><button class="pin-key" onclick="kp('6')">6</button>
+        <button class="pin-key" onclick="kp('7')">7</button><button class="pin-key" onclick="kp('8')">8</button><button class="pin-key" onclick="kp('9')">9</button>
+        <button class="pin-key ghost"></button><button class="pin-key" onclick="kp('0')">0</button><button class="pin-key del" onclick="kd()">⌫</button>
       </div>
       <div class="pin-error" id="pinErr"></div>
     </div>
 
-    <!-- Setup new PIN for profile -->
     <div id="setupScreen">
       <div class="setup-step active" id="ss1">
         <div class="pin-back" onclick="backToProfiles()">← Назад</div>
@@ -554,8 +537,7 @@ body::before {
           <div class="pin-hint">Придумайте PIN-код</div>
         </div>
         <div class="pin-dots" id="setupDots">
-          <div class="pin-dot"></div><div class="pin-dot"></div>
-          <div class="pin-dot"></div><div class="pin-dot"></div>
+          <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
         </div>
         <div class="pin-keypad">
           <button class="pin-key" onclick="sp('1')">1</button><button class="pin-key" onclick="sp('2')">2</button><button class="pin-key" onclick="sp('3')">3</button>
@@ -572,8 +554,7 @@ body::before {
           <div class="pin-hint">Повторите PIN-код</div>
         </div>
         <div class="pin-dots" id="confirmDots">
-          <div class="pin-dot"></div><div class="pin-dot"></div>
-          <div class="pin-dot"></div><div class="pin-dot"></div>
+          <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
         </div>
         <div class="pin-keypad">
           <button class="pin-key" onclick="cp('1')">1</button><button class="pin-key" onclick="cp('2')">2</button><button class="pin-key" onclick="cp('3')">3</button>
@@ -584,8 +565,6 @@ body::before {
         <div class="pin-error" id="confErr"></div>
       </div>
     </div>
-
-
   </div>
 </div>
 
@@ -619,22 +598,16 @@ body::before {
       <button class="hamburger" id="hamburger">☰</button>
       <div class="topbar-title" id="pageTitle">Дашборд</div>
       <div class="topbar-right">
-        <div class="sync-status" id="syncStatus">
-          <span class="dot"></span>
-          <span id="syncStatusText">—</span>
-        </div>
-        <button class="sync-btn" onclick="syncNow()" id="syncBtn">
-          <span class="sync-icon">↻</span> Синхр.
-        </button>
+        <div class="sync-status" id="syncStatus"><span class="dot"></span><span id="syncStatusText">—</span></div>
+        <button class="sync-btn" onclick="syncNow()" id="syncBtn"><span class="sync-icon">↻</span> Синхр.</button>
         <span id="topbarDate"></span>
       </div>
     </div>
     <div class="content">
 
-      <!-- Pending banner (shown when there are unsynced entries) -->
       <div class="pending-banner" id="pendingBanner">
         <span id="pendingBannerText">⚠️ Есть несинхронизированные записи</span>
-        <button class="btn btn-sm" style="background:var(--warning);color:#0f0e17;border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:7px;padding:5px 11px;white-space:nowrap" onclick="syncNow()">Синхронизировать</button>
+        <button style="background:var(--warning);color:#0f0e17;border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:7px;padding:5px 11px;white-space:nowrap;font-size:0.78rem" onclick="flushPending()">Отправить</button>
       </div>
 
       <!-- DASHBOARD -->
@@ -840,14 +813,11 @@ body::before {
         <div class="card">
           <div class="settings-title">Данные</div>
           <div class="settings-row">
-            <div><div class="settings-row-lbl">Принудительная синхронизация</div><div class="settings-row-desc">Загрузить все данные из Google Sheets</div></div>
+            <div><div class="settings-row-lbl">Синхронизация</div><div class="settings-row-desc">Загрузить актуальные данные</div></div>
             <button class="btn btn-secondary btn-sm" onclick="syncNow()">↻ Синхронизировать</button>
           </div>
           <div class="settings-row">
-            <div>
-              <div class="settings-row-lbl">Отправить несохранённые записи</div>
-              <div class="settings-row-desc" id="pendingCountDesc">Записей ожидает отправки: 0</div>
-            </div>
+            <div><div class="settings-row-lbl">Отправить несохранённые</div><div class="settings-row-desc" id="pendingCountDesc">Ожидает отправки: 0</div></div>
             <button class="btn btn-secondary btn-sm" onclick="flushPending()">⬆️ Отправить</button>
           </div>
           <div class="settings-row">
@@ -855,7 +825,7 @@ body::before {
             <button class="btn btn-secondary btn-sm" onclick="exportData()">⬇️ Скачать</button>
           </div>
           <div class="settings-row">
-            <div><div class="settings-row-lbl">Очистить кэш</div><div class="settings-row-desc">Удалить локальный кэш (данные в Sheets останутся)</div></div>
+            <div><div class="settings-row-lbl">Очистить кэш</div><div class="settings-row-desc">Данные в Supabase останутся</div></div>
             <button class="btn btn-danger btn-sm" onclick="clearCache()">🗑️ Очистить</button>
           </div>
         </div>
@@ -869,14 +839,8 @@ body::before {
 <div class="modal-bg" id="editModal">
   <div class="modal">
     <div class="modal-title">Редактировать профиль</div>
-    <div class="form-group">
-      <label class="form-label">Имя</label>
-      <input class="form-input" id="ep_name" maxlength="20">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Аватар</label>
-      <div class="avatar-grid" id="ep_avatarGrid"></div>
-    </div>
+    <div class="form-group"><label class="form-label">Имя</label><input class="form-input" id="ep_name" maxlength="20"></div>
+    <div class="form-group"><label class="form-label">Аватар</label><div class="avatar-grid" id="ep_avatarGrid"></div></div>
     <div class="form-group">
       <label class="form-label">Новый PIN <span>(оставьте пустым чтобы не менять)</span></label>
       <input class="form-input" id="ep_pin" type="password" maxlength="4" placeholder="4 цифры" inputmode="numeric">
@@ -889,7 +853,7 @@ body::before {
   </div>
 </div>
 
-<button class="fab" onclick="navigate('new-entry')" title="Новая запись">✍️</button>
+<button class="fab" id="fabBtn" title="Новая запись">✍️</button>
 <div class="toast" id="toast"></div>
 
 <script>
